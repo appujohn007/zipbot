@@ -9,6 +9,9 @@ from utils import zip_work, dir_work, up_progress, list_dir, Msg, db_session, Us
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Set Pyrogram logging level to ERROR
+logging.getLogger("pyrogram").setLevel(logging.ERROR)
+
 # Bot credentials from environment variables
 app_id = int(os.environ.get("API_ID", 10471716))
 app_key = os.environ.get('API_HASH', "f8a1b21a13af154596e2ff5bed164860")
