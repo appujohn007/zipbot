@@ -16,7 +16,7 @@ def start(_, msg: types.Message):
             User(uid=uid, status=0)  # Initializing the user on database
             commit()
 
-    msg.reply(Msg.start(msg))
+    msg.reply(Hello)
 
 
 @Client.on_message(filters.command("zip"))
