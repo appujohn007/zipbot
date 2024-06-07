@@ -3,7 +3,7 @@ import logging
 from pyrogram import Client, filters, types
 from zipfile import ZipFile
 from os import remove, rmdir, mkdir
-from utils import zip_work, dir_work, up_progress, list_dir, Msg, db_session, User, commit
+from utils import zip_work, dir_work, up_progress, list_dir, db_session, User, commit
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -23,103 +23,118 @@ app = Client("zipBot", app_id, app_key, bot_token=token)
 @app.on_message(filters.command("start"))
 def start(client, msg: types.Message):
     """Reply start message and add the user to database"""
-    uid = msg.from_user.id
-    logger.info(f"Received /start from user {uid}")
+    try:
+        uid = msg.from_user.id
+        logger.info(f"Received /start from user {uid}")
 
-    with db_session:
-        if not User.get(uid=uid):
-            User(uid=uid, status=0)  # Initializing the user on database
-            commit()
+        with db_session:
+            if not User.get(uid=uid):
+                User(uid=uid, status=0)  # Initializing the user on database
+                commit()
 
-    msg.reply(Msg.start(msg))
-
+        msg.reply("Welcome! You can use /zip command to start zipping files.")
+    except Exception as e:
+        logger.error(f"Error in start: {e}")
+        msg.reply("An error occurred. Please try again later.")
 
 @app.on_message(filters.command("zip"))
 def start_zip(client, msg: types.Message):
     """Starting get files to archive"""
-    uid = msg.from_user.id
-    logger.info(f"Received /zip from user {uid}")
-
-    msg.reply(Msg.zip)
-
-    with db_session:
-        User.get(uid=uid).status = 1  # change user-status to "INSERT"
-        commit()
-
     try:
-        mkdir(dir_work(uid))  # create static-folder for user
-    except FileExistsError:  # in case the folder already exists
-        for file in list_dir(uid):
-            remove(dir_work(uid) + file)  # delete all files from folder
-        rmdir(dir_work(uid))  # delete folder
-        mkdir(dir_work(uid))
+        uid = msg.from_user.id
+        logger.info(f"Received /zip from user {uid}")
+
+        msg.reply("Please send the files you want to zip.")
+
+        with db_session:
+            User.get(uid=uid).status = 1  # change user-status to "INSERT"
+            commit()
+
+        try:
+            mkdir(dir_work(uid))  # create static-folder for user
+        except FileExistsError:  # in case the folder already exists
+            for file in list_dir(uid):
+                remove(dir_work(uid) + file)  # delete all files from folder
+            rmdir(dir_work(uid))  # delete folder
+            mkdir(dir_work(uid))
+    except Exception as e:
+        logger.error(f"Error in start_zip: {e}")
+        msg.reply("An error occurred. Please try again later.")
 
 @app.on_message(filters.media)
 def enter_files(client, msg: types.Message):
     """Download files"""
-    uid = msg.from_user.id
-    logger.info(f"Received media from user {uid}")
+    try:
+        uid = msg.from_user.id
+        logger.info(f"Received media from user {uid}")
 
-    with db_session:
-        usr = User.get(uid=uid)
-        if usr.status == 1:  # check if user-status is "INSERT"
-            file_type = msg.document or msg.video or msg.photo or msg.audio
+        with db_session:
+            usr = User.get(uid=uid)
+            if usr.status == 1:  # check if user-status is "INSERT"
+                file_type = msg.document or msg.video or msg.photo or msg.audio
 
-            if file_type.file_size > 2097152000:
-                msg.reply(Msg.too_big)
-            elif len(list_dir(uid)) > 500:
-                msg.reply(Msg.too_much)
+                if file_type.file_size > 2097152000:
+                    msg.reply("The file size exceeds the maximum limit.")
+                elif len(list_dir(uid)) > 500:
+                    msg.reply("You have reached the maximum number of files allowed.")
+                else:
+                    downsts = msg.reply("Downloading file...", True)  # send status-download message
+                    msg.download(dir_work(uid))
+
+                    downsts.delete()  # delete status-download message
             else:
-                downsts = msg.reply(Msg.downloading, True)  # send status-download message
-                msg.download(dir_work(uid))
-
-                downsts.delete()  # delete status-download message
-        else:
-            msg.reply(Msg.send_zip)  # if user-status is not "INSERT"
+                msg.reply("Please send the /stopzip command to finish zipping and send the archive.")  # if user-status is not "INSERT"
+    except Exception as e:
+        logger.error(f"Error in enter_files: {e}")
+        msg.reply("An error occurred. Please try again later.")
 
 @app.on_message(filters.command("stopzip"))
 def stop_zip(client, msg: types.Message):
     """Exit from insert mode and send the archive"""
-    uid = msg.from_user.id
-    logger.info(f"Received /stopzip from user {uid}")
+    try:
+        uid = msg.from_user.id
+        logger.info(f"Received /stopzip from user {uid}")
 
-    if len(msg.command) == 1:
-        zip_path = zip_work(uid)
-    else:
-        zip_path = "static/" + msg.command[1]  # custom zip-file name
-
-    with db_session:
-        usr = User.get(uid=uid)
-        if usr.status == 1:
-            usr.status = 0  # change user-status to "NOT-INSERT"
-            commit()
+        if len(msg.command) == 1:
+            zip_path = zip_work(uid)
         else:
-            msg.reply(Msg.send_zip)
+            zip_path = "static/" + msg.command[1]  # custom zip-file name
+
+        with db_session:
+            usr = User.get(uid=uid)
+            if usr.status == 1:
+                usr.status = 0  # change user-status to "NOT-INSERT"
+                commit()
+            else:
+                msg.reply("Please send the /stopzip command to finish zipping and send the archive.")
+                return
+
+        stsmsg = msg.reply(f"Zipping files... Total: {len(list_dir(uid))}")  # send status-message "ZIPPING" and count files
+
+        if not list_dir(uid):  # if len files is zero
+            msg.reply("No files to zip.")
+            rmdir(dir_work(uid))
             return
 
-    stsmsg = msg.reply(Msg.zipping.format(len(list_dir(uid))))  # send status-message "ZIPPING" and count files
+        for file in list_dir(uid):
+            with ZipFile(zip_path, "a") as zip:
+                zip.write(f"{dir_work(uid)}/{file}")  # add files to zip-archive
+            remove(f"{dir_work(uid)}{file}")  # delete files that added
 
-    if not list_dir(uid):  # if len files is zero
-        msg.reply(Msg.zero_files)
-        rmdir(dir_work(uid))
-        return
+        stsmsg.edit_text("Uploading the zip archive...")  # change status-msg to "UPLOADING"
 
-    for file in list_dir(uid):
-        with ZipFile(zip_path, "a") as zip:
-            zip.write(f"{dir_work(uid)}/{file}")  # add files to zip-archive
-        remove(f"{dir_work(uid)}{file}")  # delete files that added
+        try:
+            msg.reply_document(zip_path, progress=up_progress,  # send the zip-archive
+                               progress_args=(stsmsg,))
+        except ValueError as e:
+            msg.reply(f"An unknown error occurred: {str(e)}")
 
-    stsmsg.edit_text(Msg.uploading)  # change status-msg to "UPLOADING"
-
-    try:
-        msg.reply_document(zip_path, progress=up_progress,  # send the zip-archive
-                           progress_args=(stsmsg,))
-    except ValueError as e:
-        msg.reply(Msg.unknown_error.format(str(e)))
-
-    stsmsg.delete()  # delete the status-msg
-    remove(zip_path)  # delete the zip-archive
-    rmdir(dir_work(uid))  # delete the static-folder
+        stsmsg.delete()  # delete the status-msg
+        remove(zip_path)  # delete the zip-archive
+        rmdir(dir_work(uid))  # delete the static-folder
+    except Exception as e:
+        logger.error(f"Error in stop_zip: {e}")
+        msg.reply("An error occurred. Please try again later.")
 
 if __name__ == '__main__':
     try:
@@ -127,4 +142,7 @@ if __name__ == '__main__':
     except FileExistsError:
         pass
 
-    app.run()
+    try:
+        app.run()
+    except Exception as e:
+        logger.error(f"Error running the bot: {e}")
