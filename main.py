@@ -31,7 +31,8 @@ def start(client, msg: types.Message):
             User(uid=uid, status=0)  # Initializing the user on database
             commit()
 
-    msg.reply(Msg.hello)
+    msg.reply(Msg.start(msg))
+
 
 @app.on_message(filters.command("zip"))
 def start_zip(client, msg: types.Message):
