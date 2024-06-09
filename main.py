@@ -25,6 +25,10 @@ app = Client("zipBot", app_id, app_key, bot_token=token)
 def start(client, msg: types.Message):
     """Reply start message and add the user to database"""
     try:
+        if msg.from_user is None:
+            msg.reply("An error occurred. Please try again later.")
+            return
+
         uid = msg.from_user.id
         with db_session:
             if not User.get(uid=uid):
@@ -40,6 +44,10 @@ def start(client, msg: types.Message):
 def start_zip(client, msg: types.Message):
     """Starting get files to archive"""
     try:
+        if msg.from_user is None:
+            msg.reply("An error occurred. Please try again later.")
+            return
+
         uid = msg.from_user.id
 
         msg.reply("Please send the files you want to zip.")
@@ -63,6 +71,10 @@ def start_zip(client, msg: types.Message):
 def enter_files(client, msg: types.Message):
     """Download files"""
     try:
+        if msg.from_user is None:
+            msg.reply("An error occurred. Please try again later.")
+            return
+
         uid = msg.from_user.id
         logger.info(f"Received media from user {uid}")
 
@@ -90,6 +102,10 @@ def enter_files(client, msg: types.Message):
 def stop_zip(client, msg: types.Message):
     """Exit from insert mode and send the archive"""
     try:
+        if msg.from_user is None:
+            msg.reply("An error occurred. Please try again later.")
+            return
+
         uid = msg.from_user.id
         if len(msg.command) == 1:
             zip_path = zip_work(uid)
