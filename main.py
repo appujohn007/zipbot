@@ -20,13 +20,13 @@ token = os.environ.get('BOT_TOKEN', "6916875347:AAEVxR4cO_sIBB6V57ANA92pHKxzw9G3
 # Initialize the client
 app = Client("zipBot", app_id, app_key, bot_token=token)
 
+
+
+
 @app.on_message(filters.command("start"))
 def start(client, msg: types.Message):
     """Reply start message and add the user to database"""
     try:
-        uid = msg.from_user.id
-        logger.info(f"Received /start from user {uid}")
-
         with db_session:
             if not User.get(uid=uid):
                 User(uid=uid, status=0)  # Initializing the user on database
@@ -41,8 +41,6 @@ def start(client, msg: types.Message):
 def start_zip(client, msg: types.Message):
     """Starting get files to archive"""
     try:
-        uid = msg.from_user.id
-        logger.info(f"Received /zip from user {uid}")
 
         msg.reply("Please send the files you want to zip.")
 
@@ -59,7 +57,7 @@ def start_zip(client, msg: types.Message):
             mkdir(dir_work(uid))
     except Exception as e:
         logger.error(f"Error in start_zip: {e}")
-        msg.reply("An error occurred. Please try again later.")
+        msg.reply(f"Error in zipping : {e}")
 
 @app.on_message(filters.media)
 def enter_files(client, msg: types.Message):
@@ -86,7 +84,7 @@ def enter_files(client, msg: types.Message):
                 msg.reply("Please send the /stopzip command to finish zipping and send the archive.")  # if user-status is not "INSERT"
     except Exception as e:
         logger.error(f"Error in enter_files: {e}")
-        msg.reply("An error occurred. Please try again later.")
+        msg.reply("An error occurred. Please try again later.\n\Error in enter_files: {e}")
 
 
 #Start to make zip
@@ -94,9 +92,6 @@ def enter_files(client, msg: types.Message):
 def stop_zip(client, msg: types.Message):
     """Exit from insert mode and send the archive"""
     try:
-        uid = msg.from_user.id
-        logger.info(f"Received /stopzip from user {uid}")
-
         if len(msg.command) == 1:
             zip_path = zip_work(uid)
         else:
@@ -108,7 +103,7 @@ def stop_zip(client, msg: types.Message):
                 usr.status = 0  # change user-status to "NOT-INSERT"
                 commit()
             else:
-                msg.reply("Please send the /stopzip command to finish zipping and send the archive.")
+                msg.reply("Please send the /done command to finish zipping and send the archive.")
                 return
 
         stsmsg = msg.reply(f"Zipping files... Total: {len(list_dir(uid))}")  # send status-message "ZIPPING" and count files
