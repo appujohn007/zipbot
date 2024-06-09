@@ -1,4 +1,5 @@
 import os
+from pony.orm import *
 import time
 import logging
 from pyrogram.types import Message
@@ -6,9 +7,6 @@ from zipfile import ZipFile
 from os import remove, mkdir, listdir, rmdir
 import asyncio
 from pyrogram.errors import FloodWait
-from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -16,28 +14,15 @@ logger = logging.getLogger(__name__)
 
 # Database setup
 DATABASE_URL = "sqlite:///example.db"  # Replace with your database URL
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+db = Database()
 
-class User(Base):
-    __tablename__ = 'users'
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, index=True)
+class User(db.Entity):
+    uid = PrimaryKey(int, size=64)  # Allows larger values for uid
+    status = Required(int)  # status-user: "INSERT"/"NOT-INSERT"
 
-Base.metadata.create_all(bind=engine)
+db.bind(provider='sqlite', filename='zipbot.sqlite', create_db=True)
+db.generate_mapping(create_tables=True)
 
-def db_session():
-    """Create a new database session."""
-    session = SessionLocal()
-    try:
-        yield session
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
 
 def commit():
     """Commit the current database transaction."""
