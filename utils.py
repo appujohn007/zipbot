@@ -1,6 +1,7 @@
 from pony.orm import *
 from pyrogram.types import Message
 from os import listdir
+import time
 
 # ========= DB build =========
 db = Database()
@@ -27,24 +28,41 @@ def list_dir(uid: int) -> list:
 
 def up_progress(current, total, msg: Message):
     """ edit status-msg with progress of the uploading """
-    msg.edit(f"**Upload progress: {current * 100 / total:.1f}%**")
+    progress = current / total
+    speed = current / (time.time() - start_time)
+    eta = (total - current) / speed if speed > 0 else 0
+    msg.edit(f"**Upload progress: {progress * 100:.1f}%**\n"
+             f"**Speed:** {speed / 1024:.2f} KB/s\n"
+             f"**ETA:** {eta:.2f} s")
+
+def download_progress(current, total, msg: Message):
+    """ edit status-msg with progress of the downloading """
+    progress = current / total
+    speed = current / (time.time() - start_time)
+    eta = (total - current) / speed if speed > 0 else 0
+    msg.edit(f"**Download progress: {progress * 100:.1f}%**\n"
+             f"**Speed:** {speed / 1024:.2f} KB/s\n"
+             f"**ETA:** {eta:.2f} s")
 
 # ========= MSG class =========
 class Msg:
     def start(msg: Message) -> str:
         """ return start-message text """
         txt = f"Hey {msg.from_user.mention}!\n" \
-              "\nI can compress files in to an archive." \
+              "\nI can compress files into an archive." \
               "\nJust send /zip, and follow the instructions."
         return txt
 
-    zip = "Send the files you want to compress, and at the end send /stopzip after all the files have been downloaded.\n" \
+    zip = "Send the files you want to compress, and at the end send /done after all the files have been downloaded.\n" \
           "\n\nNote: due to upload limit, the total size of the file(s) can be at most 2GB."
     too_big = "Note: due to upload limit, the total size of the file(s) can be at most 2GB."
-    too_much = "Note: the total number of the files can be at most 500"
-    send_zip = "Send /zip to compress the files"
-    zipping = "start compressing {} files..."
-    uploading = "uploading archive..."
-    unknow_error = "An unknown error occurred"
-    downloading = "downloading..."
-    zero_files = "No files were sent"
+    too_much = "Note: the total number of files can be at most 500."
+    send_zip = "Send /zip to compress the files."
+    zipping = "Start compressing {} files..."
+    uploading = "Uploading archive..."
+    unknow_error = "An unknown error occurred."
+    downloading = "Downloading..."
+    zero_files = "No files were sent."
+
+# ========= Global Variables =========
+start_time = time.time()
