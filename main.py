@@ -6,8 +6,6 @@ from os import remove, rmdir, mkdir
 from utils import zip_work, dir_work, up_progress, list_dir, db_session, User, commit, download_progress
 import time
 
-
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
