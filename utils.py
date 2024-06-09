@@ -26,59 +26,46 @@ def list_dir(uid: int) -> list:
     """ items in static-user folder """
     return listdir(dir_work(uid))
 
-def format_eta(seconds: float) -> str:
-    """ Format ETA in minutes and seconds """
-    if seconds >= 60:
-        minutes = int(seconds // 60)
-        seconds = int(seconds % 60)
-        return f"{minutes} min {seconds} sec"
-    else:
-        return f"{int(seconds)} sec"
+def format_speed_and_eta(speed, eta):
+    """Format speed to display in KB/s or MB/s and ETA in minutes and seconds"""
+    speed_str = f"{speed / 1024:.2f} KB/s" if speed < 1024 * 1024 else f"{speed / (1024 * 1024):.2f} MB/s"
+    eta_str = f"{eta // 60:.0f} min {eta % 60:.0f} sec" if eta >= 60 else f"{eta:.0f} sec"
+    return speed_str, eta_str
 
-def format_speed(speed: float) -> str:
-    """ Format speed in MB/s and KB/s """
-    if speed >= 1024:
-        mb_speed = speed / 1024
-        return f"{mb_speed:.2f} MB/s"
-    else:
-        return f"{speed:.2f} KB/s"
-
-def up_progress(current, total, msg: Message, start_time: float):
-    """ edit status-msg with progress of the uploading """
-    progress = current / total
-    elapsed = time.time() - start_time
-    speed = current / elapsed if elapsed > 0 else 0
-    eta = (total - current) / speed if speed > 0 else 0
-    msg.edit(f"**Upload progress: {progress * 100:.1f}%**\n"
-             f"**Speed:** {format_speed(speed)}\n"
-             f"**ETA:** {format_eta(eta)}")
-
-def download_progress(current, total, msg: Message, start_time: float):
+def download_progress(current, total, msg: Message, start_time):
     """ edit status-msg with progress of the downloading """
-    progress = current / total
-    elapsed = time.time() - start_time
-    speed = current / elapsed if elapsed > 0 else 0
-    eta = (total - current) / speed if speed > 0 else 0
-    msg.edit(f"**Download progress: {progress * 100:.1f}%**\n"
-             f"**Speed:** {format_speed(speed)}\n"
-             f"**ETA:** {format_eta(eta)}")
+    elapsed_time = time.time() - start_time
+    speed = current / elapsed_time
+    progress = current / total * 100
+    eta = (total - current) / speed
+    speed_str, eta_str = format_speed_and_eta(speed, eta)
 
-# ========= MSG class =========
-class Msg:
-    def start(msg: Message) -> str:
-        """ return start-message text """
-        txt = f"Hey {msg.from_user.mention}!\n" \
-              "\nI can compress files into an archive." \
-              "\nJust send /zip, and follow the instructions."
-        return txt
+    new_content = (f"**Download progress: {progress:.1f}%**\n"
+                   f"Speed: {speed_str}\n"
+                   f"ETA: {eta_str}")
+    
+    try:
+        if msg.text != new_content:
+            msg.edit(new_content)
+    except Exception as e:
+        # Log the error or handle it as needed
+        pass
 
-    zip = "Send the files you want to compress, and at the end send /done after all the files have been downloaded.\n" \
-          "\n\nNote: due to upload limit, the total size of the file(s) can be at most 2GB."
-    too_big = "Note: due to upload limit, the total size of the file(s) can be at most 2GB."
-    too_much = "Note: the total number of files can be at most 500."
-    send_zip = "Send /zip to compress the files."
-    zipping = "Start compressing {} files..."
-    uploading = "Uploading archive..."
-    unknow_error = "An unknown error occurred."
-    downloading = "Downloading..."
-    zero_files = "No files were sent."
+def up_progress(current, total, msg: Message, start_time):
+    """ edit status-msg with progress of the uploading """
+    elapsed_time = time.time() - start_time
+    speed = current / elapsed_time
+    progress = current / total * 100
+    eta = (total - current) / speed
+    speed_str, eta_str = format_speed_and_eta(speed, eta)
+
+    new_content = (f"**Upload progress: {progress:.1f}%**\n"
+                   f"Speed: {speed_str}\n"
+                   f"ETA: {eta_str}")
+    
+    try:
+        if msg.text != new_content:
+            msg.edit(new_content)
+    except Exception as e:
+        # Log the error or handle it as needed
+        pass
