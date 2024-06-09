@@ -3,8 +3,9 @@ import logging
 from pyrogram import Client, filters, types
 from zipfile import ZipFile
 from os import remove, rmdir, mkdir
-from utils import zip_work, dir_work, up_progress, list_dir, db_session, User, commit, download_progress
+from utils import zip_work, dir_work, up_progress, list_dir, db_session, User, commit, download_progress, handle_flood_wait
 import time
+import asyncio
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -135,29 +136,13 @@ def stop_zip(client, msg: types.Message):
                 zip.write(file_path, arcname=file)  # add files to zip-archive with original names
                 remove(file_path)  # delete files that added
 
-        stsmsg.edit_text("Uploading the zip archive...")  # change status-msg to "UPLOADING"
-        
-        start_time = time.time()
-        try:
-            msg.reply_document(zip_path, progress=up_progress,  # send the zip-archive
-                               progress_args=(stsmsg, start_time))
-        except ValueError as e:
-            msg.reply(f"An unknown error occurred: {str(e)}")
+        asyncio.run(handle_flood_wait(msg.reply_document, zip_path, progress=up_progress, progress_args=(stsmsg, time.time())))
 
-        stsmsg.delete()  # delete the status-msg
-        remove(zip_path)  # delete the zip-archive
-        rmdir(dir_work(uid))  # delete the static-folder
+        rmdir(dir_work(uid))
+        remove(zip_path)
     except Exception as e:
         logger.error(f"Error in stop_zip: {e}")
-        msg.reply("An error occurred. Please try again later.")
+        msg.reply(f"An error occurred. Please try again later.\nError in stop_zip: {e}")
 
-if __name__ == '__main__':
-    try:
-        mkdir("static")  # create static files folder
-    except FileExistsError:
-        pass
-
-    try:
-        app.run()
-    except Exception as e:
-        logger.error(f"Error running the bot: {e}")
+if __name__ == "__main__":
+    app.run()
