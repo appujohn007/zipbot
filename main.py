@@ -83,7 +83,7 @@ def enter_files(client, msg: types.Message):
                 msg.reply("Please send the /done command to finish zipping and send the archive.")  # if user-status is not "INSERT"
     except Exception as e:
         logger.error(f"Error in enter_files: {e}")
-        msg.reply("An error occurred. Please try again later.\n\Error in enter_files: {e}")
+        msg.reply(f"An error occurred. Please try again later.\n\Error in enter_files: {e}")
 
 # Start to make zip
 @app.on_message(filters.command("done"))
@@ -113,9 +113,11 @@ def stop_zip(client, msg: types.Message):
             return
 
         for file in list_dir(uid):
+            file_path = f"{dir_work(uid)}/{file}"
             with ZipFile(zip_path, "a") as zip:
-                zip.write(f"{dir_work(uid)}/{file}")  # add files to zip-archive
-            remove(f"{dir_work(uid)}{file}")  # delete files that added
+                if os.path.exists(file_path):
+                    zip.write(file_path)  # add files to zip-archive
+                    remove(file_path)  # delete files that added
 
         stsmsg.edit_text("Uploading the zip archive...")  # change status-msg to "UPLOADING"
         
