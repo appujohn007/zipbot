@@ -4,7 +4,6 @@ import logging
 from pyrogram.types import Message
 from zipfile import ZipFile
 from os import remove, mkdir, listdir, rmdir
-from database import db_session, User, commit
 import asyncio
 from pyrogram.errors import FloodWait
 
