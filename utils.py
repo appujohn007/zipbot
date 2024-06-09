@@ -12,8 +12,6 @@ from pyrogram.errors import FloodWait
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Database setup
-DATABASE_URL = "sqlite:///example.db"  # Replace with your database URL
 db = Database()
 
 class User(db.Entity):
@@ -22,6 +20,7 @@ class User(db.Entity):
 
 db.bind(provider='sqlite', filename='zipbot.sqlite', create_db=True)
 db.generate_mapping(create_tables=True)
+
 
 
 def commit():
