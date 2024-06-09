@@ -3,7 +3,7 @@ import logging
 from pyrogram import Client, filters, types
 from zipfile import ZipFile
 from os import remove, rmdir, mkdir
-from utils import zip_work, dir_work, up_progress, list_dir, db_session, User, commit
+from utils import zip_work, dir_work, up_progress, list_dir, db_session, User, commit, download_progress
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -20,13 +20,11 @@ token = os.environ.get('BOT_TOKEN', "6916875347:AAEVxR4cO_sIBB6V57ANA92pHKxzw9G3
 # Initialize the client
 app = Client("zipBot", app_id, app_key, bot_token=token)
 
-
-
-
 @app.on_message(filters.command("start"))
 def start(client, msg: types.Message):
     """Reply start message and add the user to database"""
     try:
+        uid = msg.from_user.id
         with db_session:
             if not User.get(uid=uid):
                 User(uid=uid, status=0)  # Initializing the user on database
@@ -41,6 +39,7 @@ def start(client, msg: types.Message):
 def start_zip(client, msg: types.Message):
     """Starting get files to archive"""
     try:
+        uid = msg.from_user.id
 
         msg.reply("Please send the files you want to zip.")
 
@@ -77,21 +76,19 @@ def enter_files(client, msg: types.Message):
                     msg.reply("You have reached the maximum number of files allowed.")
                 else:
                     downsts = msg.reply("Downloading file...", True)  # send status-download message
-                    msg.download(dir_work(uid))
-
-                    downsts.delete()  # delete status-download message
+                    msg.download(dir_work(uid), progress=download_progress, progress_args=(downsts,))
             else:
-                msg.reply("Please send the /stopzip command to finish zipping and send the archive.")  # if user-status is not "INSERT"
+                msg.reply("Please send the /done command to finish zipping and send the archive.")  # if user-status is not "INSERT"
     except Exception as e:
         logger.error(f"Error in enter_files: {e}")
         msg.reply("An error occurred. Please try again later.\n\Error in enter_files: {e}")
 
-
-#Start to make zip
+# Start to make zip
 @app.on_message(filters.command("done"))
 def stop_zip(client, msg: types.Message):
     """Exit from insert mode and send the archive"""
     try:
+        uid = msg.from_user.id
         if len(msg.command) == 1:
             zip_path = zip_work(uid)
         else:
