@@ -35,6 +35,14 @@ def format_eta(seconds: float) -> str:
     else:
         return f"{int(seconds)} sec"
 
+def format_speed(speed: float) -> str:
+    """ Format speed in MB/s and KB/s """
+    if speed >= 1024:
+        mb_speed = speed / 1024
+        return f"{mb_speed:.2f} MB/s"
+    else:
+        return f"{speed:.2f} KB/s"
+
 def up_progress(current, total, msg: Message, start_time: float):
     """ edit status-msg with progress of the uploading """
     progress = current / total
@@ -42,7 +50,7 @@ def up_progress(current, total, msg: Message, start_time: float):
     speed = current / elapsed if elapsed > 0 else 0
     eta = (total - current) / speed if speed > 0 else 0
     msg.edit(f"**Upload progress: {progress * 100:.1f}%**\n"
-             f"**Speed:** {speed / 1024:.2f} KB/s\n"
+             f"**Speed:** {format_speed(speed)}\n"
              f"**ETA:** {format_eta(eta)}")
 
 def download_progress(current, total, msg: Message, start_time: float):
@@ -52,7 +60,7 @@ def download_progress(current, total, msg: Message, start_time: float):
     speed = current / elapsed if elapsed > 0 else 0
     eta = (total - current) / speed if speed > 0 else 0
     msg.edit(f"**Download progress: {progress * 100:.1f}%**\n"
-             f"**Speed:** {speed / 1024:.2f} KB/s\n"
+             f"**Speed:** {format_speed(speed)}\n"
              f"**ETA:** {format_eta(eta)}")
 
 # ========= MSG class =========
