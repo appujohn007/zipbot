@@ -75,8 +75,9 @@ def enter_files(client, msg: types.Message):
                 elif len(list_dir(uid)) > 500:
                     msg.reply("You have reached the maximum number of files allowed.")
                 else:
+                    start_time = time.time()
                     downsts = msg.reply("Downloading file...", True)  # send status-download message
-                    msg.download(dir_work(uid), progress=download_progress, progress_args=(downsts,))
+                    msg.download(dir_work(uid), progress=download_progress, progress_args=(downsts, start_time))
             else:
                 msg.reply("Please send the /done command to finish zipping and send the archive.")  # if user-status is not "INSERT"
     except Exception as e:
@@ -116,10 +117,11 @@ def stop_zip(client, msg: types.Message):
             remove(f"{dir_work(uid)}{file}")  # delete files that added
 
         stsmsg.edit_text("Uploading the zip archive...")  # change status-msg to "UPLOADING"
-
+        
+        start_time = time.time()
         try:
             msg.reply_document(zip_path, progress=up_progress,  # send the zip-archive
-                               progress_args=(stsmsg,))
+                               progress_args=(stsmsg, start_time))
         except ValueError as e:
             msg.reply(f"An unknown error occurred: {str(e)}")
 
