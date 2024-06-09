@@ -26,23 +26,34 @@ def list_dir(uid: int) -> list:
     """ items in static-user folder """
     return listdir(dir_work(uid))
 
-def up_progress(current, total, msg: Message):
+def format_eta(seconds: float) -> str:
+    """ Format ETA in minutes and seconds """
+    if seconds >= 60:
+        minutes = int(seconds // 60)
+        seconds = int(seconds % 60)
+        return f"{minutes} min {seconds} sec"
+    else:
+        return f"{int(seconds)} sec"
+
+def up_progress(current, total, msg: Message, start_time: float):
     """ edit status-msg with progress of the uploading """
     progress = current / total
-    speed = current / (time.time() - start_time)
+    elapsed = time.time() - start_time
+    speed = current / elapsed if elapsed > 0 else 0
     eta = (total - current) / speed if speed > 0 else 0
     msg.edit(f"**Upload progress: {progress * 100:.1f}%**\n"
              f"**Speed:** {speed / 1024:.2f} KB/s\n"
-             f"**ETA:** {eta:.2f} s")
+             f"**ETA:** {format_eta(eta)}")
 
-def download_progress(current, total, msg: Message):
+def download_progress(current, total, msg: Message, start_time: float):
     """ edit status-msg with progress of the downloading """
     progress = current / total
-    speed = current / (time.time() - start_time)
+    elapsed = time.time() - start_time
+    speed = current / elapsed if elapsed > 0 else 0
     eta = (total - current) / speed if speed > 0 else 0
     msg.edit(f"**Download progress: {progress * 100:.1f}%**\n"
              f"**Speed:** {speed / 1024:.2f} KB/s\n"
-             f"**ETA:** {eta:.2f} s")
+             f"**ETA:** {format_eta(eta)}")
 
 # ========= MSG class =========
 class Msg:
@@ -63,6 +74,3 @@ class Msg:
     unknow_error = "An unknown error occurred."
     downloading = "Downloading..."
     zero_files = "No files were sent."
-
-# ========= Global Variables =========
-start_time = time.time()
