@@ -128,12 +128,12 @@ def stop_zip(client, msg: types.Message):
             rmdir(dir_work(uid))
             return
 
-        for file in list_dir(uid):
-            file_path = f"{dir_work(uid)}/{file}"
-            with ZipFile(zip_path, "a") as zip:
-                if os.path.exists(file_path):
-                    zip.write(file_path)  # add files to zip-archive
-                    remove(file_path)  # delete files that added
+        # Add files to zip with unique names to avoid duplicates
+        with ZipFile(zip_path, "w") as zip:
+            for file in list_dir(uid):
+                file_path = f"{dir_work(uid)}/{file}"
+                zip.write(file_path, arcname=file)  # add files to zip-archive with original names
+                remove(file_path)  # delete files that added
 
         stsmsg.edit_text("Uploading the zip archive...")  # change status-msg to "UPLOADING"
         
