@@ -1,8 +1,11 @@
-from pony.migrate import * 
+from pony.orm import *
 
-migrations = [
-    # Add the 'files' column to the User table
-    ChangeSet("add_files_column_to_user", sql=[
-        "ALTER TABLE User ADD COLUMN files TEXT",
-    ]),
-]
+db = Database()
+
+class User(db.Entity):
+    uid = PrimaryKey(int, size=64)
+    status = Required(int)
+    files = Optional(Json)  # Add the files attribute
+
+db.bind(provider='sqlite', filename='zipbot.sqlite', create_db=True)
+db.generate_mapping(create_tables=True)
