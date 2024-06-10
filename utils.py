@@ -32,6 +32,9 @@ def format_speed_and_eta(speed, eta):
     eta_str = f"{eta // 60:.0f} min {eta % 60:.0f} sec" if eta >= 60 else f"{eta:.0f} sec"
     return speed_str, eta_str
 
+# Initialize a dictionary to store the last update time for each message
+last_update_time = {}
+
 def download_progress(current, total, msg: Message, start_time):
     """ edit status-msg with progress of the downloading """
     elapsed_time = time.time() - start_time
@@ -44,12 +47,16 @@ def download_progress(current, total, msg: Message, start_time):
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
     
-    try:
-        if msg.text != new_content:
-            msg.edit(new_content)
-    except Exception as e:
-        # Log the error or handle it as needed
-        pass
+    # Check if the message has been updated in the last second
+    now = time.time()
+    if msg.chat.id not in last_update_time or now - last_update_time[msg.chat.id] >= 1:
+        try:
+            if msg.text != new_content:
+                msg.edit(new_content)
+                last_update_time[msg.chat.id] = now  # Update the last update time
+        except Exception as e:
+            # Log the error or handle it as needed
+            pass
 
 def up_progress(current, total, msg: Message, start_time):
     """ edit status-msg with progress of the uploading """
@@ -63,9 +70,13 @@ def up_progress(current, total, msg: Message, start_time):
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
     
-    try:
-        if msg.text != new_content:
-            msg.edit(new_content)
-    except Exception as e:
-        # Log the error or handle it as needed
-        pass
+    # Check if the message has been updated in the last second
+    now = time.time()
+    if msg.chat.id not in last_update_time or now - last_update_time[msg.chat.id] >= 1:
+        try:
+            if msg.text != new_content:
+                msg.edit(new_content)
+                last_update_time[msg.chat.id] = now  # Update the last update time
+        except Exception as e:
+            # Log the error or handle it as needed
+            pass
