@@ -32,10 +32,10 @@ def format_speed_and_eta(speed, eta):
     eta_str = f"{eta // 60:.0f} min {eta % 60:.0f} sec" if eta >= 60 else f"{eta:.0f} sec"
     return speed_str, eta_str
 
-# Initialize a dictionary to store the last update time for each message
-last_update_time = {}
+# Controls how often the progress bar updates
+UPDATE_INTERVAL = 3  # Update every 1 second
 
-def download_progress(current, total, msg: Message, start_time):
+def download_progress(current, total, msg: Message, start_time, last_update=[0]):
     """ edit status-msg with progress of the downloading """
     elapsed_time = time.time() - start_time
     speed = current / elapsed_time
@@ -47,18 +47,17 @@ def download_progress(current, total, msg: Message, start_time):
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
     
-    # Check if the message has been updated in the last second
-    now = time.time()
-    if msg.chat.id not in last_update_time or now - last_update_time[msg.chat.id] >= 1:
+    current_time = time.time()
+    if current_time - last_update[0] >= UPDATE_INTERVAL:
         try:
             if msg.text != new_content:
                 msg.edit(new_content)
-                last_update_time[msg.chat.id] = now  # Update the last update time
+                last_update[0] = current_time
         except Exception as e:
             # Log the error or handle it as needed
             pass
 
-def up_progress(current, total, msg: Message, start_time):
+def up_progress(current, total, msg: Message, start_time, last_update=[0]):
     """ edit status-msg with progress of the uploading """
     elapsed_time = time.time() - start_time
     speed = current / elapsed_time
@@ -70,13 +69,12 @@ def up_progress(current, total, msg: Message, start_time):
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
     
-    # Check if the message has been updated in the last second
-    now = time.time()
-    if msg.chat.id not in last_update_time or now - last_update_time[msg.chat.id] >= 1:
+    current_time = time.time()
+    if current_time - last_update[0] >= UPDATE_INTERVAL:
         try:
             if msg.text != new_content:
                 msg.edit(new_content)
-                last_update_time[msg.chat.id] = now  # Update the last update time
+                last_update[0] = current_time
         except Exception as e:
             # Log the error or handle it as needed
             pass
