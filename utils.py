@@ -4,15 +4,19 @@ from os import listdir
 import time
 
 # ========= DB build =========
+
+
 db = Database()
 
 class User(db.Entity):
-    uid = PrimaryKey(int, size=64)  # Allows larger values for uid
-    status = Required(int)  # status-user: "INSERT"/"NOT-INSERT"
-    files = Optional(Json)  # List of files to be processed
+    uid = PrimaryKey(int, size=64)  
+    status = Required(int)
+    files = Optional(Json)  # Add the files attribute
 
 db.bind(provider='sqlite', filename='zipbot.sqlite', create_db=True)
 db.generate_mapping(create_tables=True)
+
+
 
 # ========= helping func =========
 def dir_work(uid: int) -> str:
