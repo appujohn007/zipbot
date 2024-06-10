@@ -41,8 +41,9 @@ def start(client, msg: types.Message):
         msg.reply("An error occurred. Please try again later.")
 
 @app.on_message(filters.command("zip"))
+def s@app.on_message(filters.command("zip"))
 def start_zip(client, msg: types.Message):
-    """Start the process of collecting files to zip"""
+    """Starting get files to archive"""
     try:
         if msg.from_user is None:
             msg.reply("An error occurred. Please try again later.")
@@ -55,16 +56,19 @@ def start_zip(client, msg: types.Message):
         with db_session:
             user = User.get(uid=uid)
             if user:
-                user.status = 1  # Set status to "INSERT"
-                user.files = []  # Initialize the list of files
-                commit()
+                user.status = 1  # Change user-status to "INSERT"
+                user.files = []  # Initialize the files list
+            else:
+                User(uid=uid, status=1, files=[])  # Initialize the user in the database with an empty files list
+            commit()
 
-        user_dir = dir_work(uid)
-        if os.path.exists(user_dir):
+        try:
+            mkdir(dir_work(uid))  # Create static-folder for user
+        except FileExistsError:  # In case the folder already exists
             for file in list_dir(uid):
-                remove(os.path.join(user_dir, file))  # Delete all files from folder
-            rmdir(user_dir)  # Delete folder
-        mkdir(user_dir)  # Create static-folder for user
+                remove(dir_work(uid) + file)  # Delete all files from folder
+            rmdir(dir_work(uid))  # Delete folder
+            mkdir(dir_work(uid))
     except Exception as e:
         logger.error(f"Error in start_zip: {e}")
         msg.reply(f"Error in zipping : {e}")
