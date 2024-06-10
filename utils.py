@@ -23,11 +23,6 @@ db.generate_mapping(create_tables=True)
 
 
 
-def commit():
-    """Commit the current database transaction."""
-    session = SessionLocal()
-    session.commit()
-
 def dir_work(uid):
     """Return the directory path for user files."""
     return f"static/{uid}/"
