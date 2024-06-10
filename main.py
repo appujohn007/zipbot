@@ -1,9 +1,9 @@
 import os
 import logging
 from pyrogram import Client, filters, types
+from zipfile import ZipFile
 from os import remove, rmdir, mkdir
 from utils import zip_work, dir_work, up_progress, list_dir, db_session, User, commit, download_progress
-from zipfile import ZipFile
 import time
 
 # Configure logging
@@ -16,7 +16,7 @@ logging.getLogger("pyrogram").setLevel(logging.ERROR)
 # Bot credentials from environment variables
 app_id = int(os.environ.get("API_ID", 10471716))
 app_key = os.environ.get('API_HASH', "f8a1b21a13af154596e2ff5bed164860")
-token = os.environ.get('BOT_TOKEN', "YOUR_BOT_TOKEN")
+token = os.environ.get('BOT_TOKEN', "6916875347:AAEVxR4cO_sIBB6V57ANA92pHKxzw9G3yX0")
 
 # Initialize the client
 app = Client("zipBot", app_id, app_key, bot_token=token)
@@ -32,7 +32,7 @@ def start(client, msg: types.Message):
         uid = msg.from_user.id
         with db_session:
             if not User.get(uid=uid):
-                User(uid=uid, status=0)  # Initializing the user in the database
+                User(uid=uid, status=0)  # Initializing the user on database
                 commit()
 
         msg.reply("Welcome! You can use /zip command to start zipping files.")
@@ -53,20 +53,15 @@ def start_zip(client, msg: types.Message):
         msg.reply("Please send the files you want to zip.")
 
         with db_session:
-            user = User.get(uid=uid)
-            if user:
-                user.status = 1  # Change user-status to "INSERT"
-                user.files = []  # Initialize the files list
-            else:
-                User(uid=uid, status=1, files=[])  # Initialize the user in the database with an empty files list
+            User.get(uid=uid).status = 1  # change user-status to "INSERT"
             commit()
 
         try:
-            mkdir(dir_work(uid))  # Create static-folder for user
-        except FileExistsError:  # In case the folder already exists
+            mkdir(dir_work(uid))  # create static-folder for user
+        except FileExistsError:  # in case the folder already exists
             for file in list_dir(uid):
-                remove(dir_work(uid) + file)  # Delete all files from folder
-            rmdir(dir_work(uid))  # Delete folder
+                remove(dir_work(uid) + file)  # delete all files from folder
+            rmdir(dir_work(uid))  # delete folder
             mkdir(dir_work(uid))
     except Exception as e:
         logger.error(f"Error in start_zip: {e}")
@@ -74,7 +69,7 @@ def start_zip(client, msg: types.Message):
 
 @app.on_message(filters.media)
 def enter_files(client, msg: types.Message):
-    """Store file information"""
+    """Download files"""
     try:
         if msg.from_user is None:
             msg.reply("An error occurred. Please try again later.")
@@ -84,23 +79,23 @@ def enter_files(client, msg: types.Message):
         logger.info(f"Received media from user {uid}")
 
         with db_session:
-            user = User.get(uid=uid)
-            if user.status == 1:  # Check if user status is "INSERT"
+            usr = User.get(uid=uid)
+            if usr.status == 1:  # check if user-status is "INSERT"
                 file_type = msg.document or msg.video or msg.photo or msg.audio
 
                 if file_type.file_size > 2097152000:
                     msg.reply("The file size exceeds the maximum limit.")
-                elif len(user.files) >= 500:
+                elif len(list_dir(uid)) > 500:
                     msg.reply("You have reached the maximum number of files allowed.")
                 else:
-                    user.files.append(file_type.file_id)  # Store file_id
-                    commit()
-                    msg.reply("File stored successfully.")
+                    start_time = time.time()
+                    downsts = msg.reply("Downloading file...", True)  # send status-download message
+                    msg.download(dir_work(uid), progress=download_progress, progress_args=(downsts, start_time))
             else:
-                msg.reply("Please send the /done command to finish zipping and send the archive.")
+                msg.reply("Please send the /done command to finish zipping and send the archive.")  # if user-status is not "INSERT"
     except Exception as e:
         logger.error(f"Error in enter_files: {e}")
-        msg.reply(f"An error occurred. Please try again later.\nError in enter_files: {e}")
+        msg.reply(f"An error occurred. Please try again later.\n\Error in enter_files: {e}")
 
 # Start to make zip
 @app.on_message(filters.command("done"))
@@ -112,66 +107,53 @@ def stop_zip(client, msg: types.Message):
             return
 
         uid = msg.from_user.id
+        if len(msg.command) == 1:
+            zip_path = zip_work(uid)
+        else:
+            zip_path = "static/" + msg.command[1]  # custom zip-file name
+
         with db_session:
             usr = User.get(uid=uid)
             if usr.status == 1:
-                usr.status = 0  # Change user-status to "NOT-INSERT"
+                usr.status = 0  # change user-status to "NOT-INSERT"
                 commit()
             else:
                 msg.reply("Please send the /done command to finish zipping and send the archive.")
                 return
 
-        if not usr.files:
+        stsmsg = msg.reply(f"Zipping files... Total: {len(list_dir(uid))}")  # send status-message "ZIPPING" and count files
+
+        if not list_dir(uid):  # if len files is zero
             msg.reply("No files to zip.")
-            return
-
-        user_dir = dir_work(uid)
-        mkdir(user_dir)  # Ensure the user directory exists
-
-        # Progress message
-        progress_msg = msg.reply("Downloading files...", quote=True)
-        start_time = time.time()
-
-        # Download all stored files with progress
-        for file_id in usr.files:
-            file = client.get_messages(msg.chat.id, file_id)
-            file.download(user_dir, progress=download_progress, progress_args=(progress_msg, start_time))
-
-        zip_path = zip_work(uid)
-        stsmsg = msg.reply(f"Zipping files... Total: {len(list_dir(uid))}")  # Send status-message "ZIPPING" and count files
-
-        if not list_dir(uid):  # If no files
-            msg.reply("No files to zip.")
-            rmdir(user_dir)
+            rmdir(dir_work(uid))
             return
 
         # Add files to zip with unique names to avoid duplicates
         with ZipFile(zip_path, "w") as zip:
             for file in list_dir(uid):
-                file_path = os.path.join(user_dir, file)
-                zip.write(file_path, arcname=file)  # Add files to zip-archive with original names
-                remove(file_path)  # Delete files that added
+                file_path = f"{dir_work(uid)}/{file}"
+                zip.write(file_path, arcname=file)  # add files to zip-archive with original names
+                remove(file_path)  # delete files that added
 
-        stsmsg.edit_text("Uploading the zip archive...")  # Change status-msg to "UPLOADING"
+        stsmsg.edit_text("Uploading the zip archive...")  # change status-msg to "UPLOADING"
         
         start_time = time.time()
         try:
-            msg.reply_document(zip_path, progress=up_progress,  # Send the zip-archive
+            msg.reply_document(zip_path, progress=up_progress,  # send the zip-archive
                                progress_args=(stsmsg, start_time))
         except ValueError as e:
             msg.reply(f"An unknown error occurred: {str(e)}")
 
-        stsmsg.delete()  # Delete the status-msg
-        remove(zip_path)  # Delete the zip-archive
-        rmdir(user_dir)  # Delete the static-folder
+        stsmsg.delete()  # delete the status-msg
+        remove(zip_path)  # delete the zip-archive
+        rmdir(dir_work(uid))  # delete the static-folder
     except Exception as e:
         logger.error(f"Error in stop_zip: {e}")
         msg.reply("An error occurred. Please try again later.")
 
-
 if __name__ == '__main__':
     try:
-        mkdir("static")  # Create static files folder
+        mkdir("static")  # create static files folder
     except FileExistsError:
         pass
 
