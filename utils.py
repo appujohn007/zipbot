@@ -9,6 +9,7 @@ db = Database()
 class User(db.Entity):
     uid = PrimaryKey(int, size=64)  # Allows larger values for uid
     status = Required(int)  # status-user: "INSERT"/"NOT-INSERT"
+    files = Optional(Json)  # List of file IDs (can use Json field to store list)
 
 db.bind(provider='sqlite', filename='zipbot.sqlite', create_db=True)
 db.generate_mapping(create_tables=True)
@@ -33,7 +34,7 @@ def format_speed_and_eta(speed, eta):
     return speed_str, eta_str
 
 # Controls how often the progress bar updates
-UPDATE_INTERVAL = 3  # Update every 1 second
+UPDATE_INTERVAL = 3  # Update every 3 seconds
 
 def download_progress(current, total, msg: Message, start_time, last_update=[0]):
     """ edit status-msg with progress of the downloading """
@@ -46,7 +47,7 @@ def download_progress(current, total, msg: Message, start_time, last_update=[0])
     new_content = (f"**Download progress: {progress:.1f}%**\n"
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
-    
+
     current_time = time.time()
     if current_time - last_update[0] >= UPDATE_INTERVAL:
         try:
@@ -68,7 +69,7 @@ def up_progress(current, total, msg: Message, start_time, last_update=[0]):
     new_content = (f"**Upload progress: {progress:.1f}%**\n"
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
-    
+
     current_time = time.time()
     if current_time - last_update[0] >= UPDATE_INTERVAL:
         try:
