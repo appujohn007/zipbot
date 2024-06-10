@@ -1,97 +1,85 @@
-import os
 from pony.orm import *
-import time
-import logging
 from pyrogram.types import Message
-from zipfile import ZipFile
-from os import remove, mkdir, listdir, rmdir
-import asyncio
-from pyrogram.errors import FloodWait
+from os import listdir
+import time
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# ========= DB build =========
+
 
 db = Database()
 
 class User(db.Entity):
-    uid = PrimaryKey(int, size=64)  # Allows larger values for uid
-    status = Required(int)  # status-user: "INSERT"/"NOT-INSERT"
+    uid = PrimaryKey(int, size=64)  
+    status = Required(int)
+    files = Optional(Json)  # Add the files attribute
 
 db.bind(provider='sqlite', filename='zipbot.sqlite', create_db=True)
 db.generate_mapping(create_tables=True)
 
 
 
-def dir_work(uid):
-    """Return the directory path for user files."""
+# ========= helping func =========
+def dir_work(uid: int) -> str:
+    """ static-user folder """
     return f"static/{uid}/"
 
-def zip_work(uid):
-    """Return the zip file path for user files."""
-    return f"static/{uid}.zip"
+def zip_work(uid: int) -> str:
+    """ zip-archive file """
+    return f'static/{uid}.zip'
 
-def list_dir(uid):
-    """Return a list of files in the user directory."""
+def list_dir(uid: int) -> list:
+    """ items in static-user folder """
     return listdir(dir_work(uid))
 
-last_update_time = {}
+def format_speed_and_eta(speed, eta):
+    """Format speed to display in KB/s or MB/s and ETA in minutes and seconds"""
+    speed_str = f"{speed / 1024:.2f} KB/s" if speed < 1024 * 1024 else f"{speed / (1024 * 1024):.2f} MB/s"
+    eta_str = f"{eta // 60:.0f} min {eta % 60:.0f} sec" if eta >= 60 else f"{eta:.0f} sec"
+    return speed_str, eta_str
 
-async def should_update_progress(chat_id):
-    global last_update_time
+# Controls how often the progress bar updates
+UPDATE_INTERVAL = 3  # Update every 3 seconds
+
+def download_progress(current, total, msg: Message, start_time, last_update=[0]):
+    """ edit status-msg with progress of the downloading """
+    elapsed_time = time.time() - start_time
+    speed = current / elapsed_time
+    progress = current / total * 100
+    eta = (total - current) / speed
+    speed_str, eta_str = format_speed_and_eta(speed, eta)
+
+    new_content = (f"**Download progress: {progress:.1f}%**\n"
+                   f"Speed: {speed_str}\n"
+                   f"ETA: {eta_str}")
+    
     current_time = time.time()
-    if chat_id not in last_update_time or (current_time - last_update_time[chat_id]) >= 1:
-        last_update_time[chat_id] = current_time
-        return True
-    return False
-
-async def download_progress(current, total, msg: Message):
-    """Edit status-msg with progress of the downloading"""
-    if await should_update_progress(msg.chat.id):
-        progress = current / total
-        speed = current / (time.time() - msg.date)
-        eta = (total - current) / speed
-
-        if eta >= 60:
-            eta_min = int(eta // 60)
-            eta_sec = int(eta % 60)
-            eta_str = f"{eta_min} min {eta_sec} sec"
-        else:
-            eta_str = f"{int(eta)} sec"
-
-        speed_str = f"{speed / 1024:.2f} KB/s" if speed < 1024 * 1024 else f"{speed / (1024 * 1024):.2f} MB/s"
-
+    if current_time - last_update[0] >= UPDATE_INTERVAL:
         try:
-            await msg.edit(f"**Download progress: {progress * 100:.1f}%**\n"
-                           f"**Speed:** {speed_str}\n"
-                           f"**ETA:** {eta_str}")
-        except FloodWait as e:
-            await handle_flood_wait(e)
+            if msg.text != new_content:
+                msg.edit(new_content)
+                last_update[0] = current_time
+        except Exception as e:
+            # Log the error or handle it as needed
+            pass
 
-async def up_progress(current, total, msg: Message):
-    """Edit status-msg with progress of the uploading"""
-    if await should_update_progress(msg.chat.id):
-        progress = current / total
-        speed = current / (time.time() - msg.date)
-        eta = (total - current) / speed
+def up_progress(current, total, msg: Message, start_time, last_update=[0]):
+    """ edit status-msg with progress of the uploading """
+    elapsed_time = time.time() - start_time
+    speed = current / elapsed_time
+    progress = current / total * 100
+    eta = (total - current) / speed
+    speed_str, eta_str = format_speed_and_eta(speed, eta)
 
-        if eta >= 60:
-            eta_min = int(eta // 60)
-            eta_sec = int(eta % 60)
-            eta_str = f"{eta_min} min {eta_sec} sec"
-        else:
-            eta_str = f"{int(eta)} sec"
-
-        speed_str = f"{speed / 1024:.2f} KB/s" if speed < 1024 * 1024 else f"{speed / (1024 * 1024):.2f} MB/s"
-
+    new_content = (f"**Upload progress: {progress:.1f}%**\n"
+                   f"Speed: {speed_str}\n"
+                   f"ETA: {eta_str}")
+    
+    current_time = time.time()
+    if current_time - last_update[0] >= UPDATE_INTERVAL:
         try:
-            await msg.edit(f"**Upload progress: {progress * 100:.1f}%**\n"
-                           f"**Speed:** {speed_str}\n"
-                           f"**ETA:** {eta_str}")
-        except FloodWait as e:
-            await handle_flood_wait(e)
-
-async def handle_flood_wait(e: FloodWait):
-    """Handle FloodWait exception by sleeping for the required duration"""
-    logger.warning(f"FloodWait: Sleeping for {e.x} seconds")
-    await asyncio.sleep(e.x)
+            if msg.text != new_content:
+                msg.edit(new_content)
+                last_update[0] = current_time
+        except Exception as e:
+            # Log the error or handle it as needed
+            pass
