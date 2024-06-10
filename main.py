@@ -41,7 +41,6 @@ def start(client, msg: types.Message):
         msg.reply("An error occurred. Please try again later.")
 
 @app.on_message(filters.command("zip"))
-def s@app.on_message(filters.command("zip"))
 def start_zip(client, msg: types.Message):
     """Starting get files to archive"""
     try:
