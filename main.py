@@ -131,11 +131,11 @@ def enter_files(client, msg: types.Message):
 
                     # Update the download progress message to indicate completion
                     file_name = file_type.file_name if file_type else "The file"
-                    downsts.edit(f"{file_name} was downloaded successfully.")
+                    downsts.edit(f"***𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍𝚎𝚍 \n`{file_name}`***", parse_mode=enums.ParseMode.MARKDOWN)
             else:
                 msg.reply("Sorry, you haven't initiated the zipping process. Please use the /zip command to start the zipping process.")
     except Exception as e:
-        msg.reply(f"An error occurred. Please try again later.\n\nError in enter_files: {e}")
+        msg.reply(f"An error occurred. Please try again later.\n\n {e}")
         logger.error(f"Error in enter_files: {e}")
 
 
