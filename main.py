@@ -5,7 +5,7 @@ from zipfile import ZipFile
 from os import remove, rmdir, mkdir
 from utils import zip_work, dir_work, up_progress, list_dir, db_session, User, commit, download_progress
 import time
-import shutil
+
 
 from scripts import help_text, start_text, invalid_cmd
 
@@ -200,6 +200,8 @@ def stop_zip(client, msg: types.Message):
                 if os.path.isdir(subdir_path):
                     shutil.rmtree(subdir_path)
     except Exception as e:
+        error_message = f"Error in stop_zip: {e}"
+        forward_error_to_channel(error_message)
         msg.reply(f"Error in zipping: {e}........Please try again later.")
         logger.error(f"Error in stop_zip: {e}")
 
