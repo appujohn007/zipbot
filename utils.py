@@ -58,10 +58,13 @@ def download_progress(current, total, msg: Message, start_time, last_update=[0])
     eta = (total - current) / speed
     speed_str, eta_str = format_speed_and_eta(speed, eta)
     size_str = format_size(total)
+    downloaded_str = format_size(current)
     progress_bar = format_progress_bar(progress)
 
     new_content = (f"**Download progress: {progress:.1f}%**\n"
                    f"{progress_bar}\n"
+                   f"Size: {size_str}\n"
+                   f"Downloaded: {downloaded_str}\n"
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
     
@@ -83,10 +86,13 @@ def up_progress(current, total, msg: Message, start_time, last_update=[0]):
     eta = (total - current) / speed
     speed_str, eta_str = format_speed_and_eta(speed, eta)
     size_str = format_size(total)
+    uploaded_str = format_size(current)
     progress_bar = format_progress_bar(progress)
 
     new_content = (f"**Upload progress: {progress:.1f}%**\n"
                    f"{progress_bar}\n"
+                   f"Size: {size_str}\n"
+                   f"Uploaded: {uploaded_str}\n"
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
     
