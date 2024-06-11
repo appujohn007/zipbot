@@ -8,7 +8,7 @@ import time
 db = Database()
 
 class User(db.Entity):
-    uid = PrimaryKey(int, size=64)  
+    uid = PrimaryKey(int, size=64)
     status = Required(int)
     zip_name = Optional(str)  # Change to store the zip name
 
@@ -41,6 +41,12 @@ def format_size(size):
             return f"{size:.2f} {unit}"
         size /= 1024
 
+def format_progress_bar(progress, length=20):
+    """Creates a progress bar with the specified length"""
+    filled_length = int(length * progress // 100)
+    bar = '█' * filled_length + '-' * (length - filled_length)
+    return f"[{bar}]"
+
 # Controls how often the progress bar updates
 UPDATE_INTERVAL = 3  # Update every 3 seconds
 
@@ -52,10 +58,11 @@ def download_progress(current, total, msg: Message, start_time, last_update=[0])
     eta = (total - current) / speed
     speed_str, eta_str = format_speed_and_eta(speed, eta)
     size_str = format_size(total)
+    progress_bar = format_progress_bar(progress)
 
     new_content = (f"**Download progress: {progress:.1f}%**\n"
+                   f"{progress_bar}\n"
                    f"Size: {size_str}\n"
-                   f"Downloaded: {format_size(current)}\n"
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
     
@@ -77,10 +84,11 @@ def up_progress(current, total, msg: Message, start_time, last_update=[0]):
     eta = (total - current) / speed
     speed_str, eta_str = format_speed_and_eta(speed, eta)
     size_str = format_size(total)
+    progress_bar = format_progress_bar(progress)
 
     new_content = (f"**Upload progress: {progress:.1f}%**\n"
+                   f"{progress_bar}\n"
                    f"Size: {size_str}\n"
-                   f"Uploaded: {format_size(current)}\n"
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
     
