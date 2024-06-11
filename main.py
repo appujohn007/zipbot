@@ -44,6 +44,30 @@ Send /help to see 🙂
         logger.error(f"Error in start: {e}")
         msg.reply("An error occurred. Please try again later.")
 
+
+
+#==========================(HELP)===================================#
+@app.on_message(filters.command("help"))
+def start(client, msg: types.Message):
+    """Reply start message and add the user to database"""
+    try:
+        if msg.from_user is None:
+            msg.reply("An error occurred. Please try again later.")
+            return
+
+        
+        help_text = """
+Hello Iam a Advanced Telegram bot to make zip files
+How to use me?
+Send /help to see 🙂
+"""
+        msg.reply(help_text)
+    except Exception as e:
+        logger.error(f"Error in start: {e}")
+        msg.reply("An error occurred. Please try again later.") 
+
+
+
 @app.on_message(filters.command("zip"))
 def start_zip(client, msg: types.Message):
     """Ask for zip name and initialize the folder"""
