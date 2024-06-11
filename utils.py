@@ -10,28 +10,23 @@ db = Database()
 class User(db.Entity):
     uid = PrimaryKey(int, size=64)  
     status = Required(int)
-    files = Optional(Json)  # Add the files attribute
+    zip_name = Optional(str)  # Change to store the zip name
 
 db.bind(provider='sqlite', filename='zipbot.sqlite', create_db=True)
 db.generate_mapping(create_tables=True)
 
 # ========= helping func =========
-def dir_work(uid: int) -> str:
+def dir_work(uid: int, zip_name: str) -> str:
     """ static-user folder """
-    return f"static/{uid}/"
+    return f"static/{uid}/{zip_name}/"
 
 def zip_work(uid: int, zip_name: str) -> str:
     """ zip-archive file """
-    user_dir = dir_work(uid)
-    try:
-        mkdir(user_dir)  # Ensure user directory exists
-    except FileExistsError:
-        pass
-    return f"{user_dir}/{zip_name}"
+    return f'static/{uid}/{zip_name}.zip'
 
-def list_dir(uid: int) -> list:
+def list_dir(uid: int, zip_name: str) -> list:
     """ items in static-user folder """
-    return listdir(dir_work(uid))
+    return listdir(dir_work(uid, zip_name))
 
 def format_speed_and_eta(speed, eta):
     """Format speed to display in KB/s or MB/s and ETA in minutes and seconds"""
