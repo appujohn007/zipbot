@@ -74,7 +74,7 @@ def up_progress(current, total, msg: Message, start_time, last_update=[0]):
     current_time = time.time()
     if current_time - last_update[0] >= UPDATE_INTERVAL:
         try:
-            if msg.text != new_content):
+            if msg.text != new_content:
                 msg.edit(new_content)
                 last_update[0] = current_time
         except Exception as e:
