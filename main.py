@@ -25,7 +25,7 @@ token = os.environ.get('BOT_TOKEN', "7227214903:AAF532JDQu3CWdeiqfKoS6aoOTOWfppJ
 # Initialize the client
 app = Client("zipBot", app_id, app_key, bot_token=token)
 
-error_channel_id = -1002030156196
+#error_channel_id = -1002030156196
 
 
 
