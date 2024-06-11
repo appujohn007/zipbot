@@ -126,6 +126,7 @@ def enter_files(client, msg: types.Message):
         msg.reply(f"An error occurred. Please try again later.\n\nError in enter_files: {e}")
         logger.error(f"Error in enter_files: {e}")
 
+
 # Start to make zip
 @app.on_message(filters.command("done"))
 def stop_zip(client, msg: types.Message):
@@ -166,17 +167,20 @@ def stop_zip(client, msg: types.Message):
         
         start_time = time.time()
         try:
-            msg.reply_document(zip_path, progress=up_progress,  # send the zip-archive
+            sent_msg = msg.reply_document(zip_path, progress=up_progress,  # send the zip-archive
                                progress_args=(stsmsg, start_time))
+            stsmsg.delete()  # delete the status-msg
+            remove(zip_path)  # delete the zip-archive
+            rmdir(dir_work(uid, zip_name))  # delete the static-folder
         except ValueError as e:
             msg.reply(f"An unknown error occurred: {str(e)}")
-
-        stsmsg.delete()  # delete the status-msg
-        remove(zip_path)  # delete the zip-archive
-        rmdir(dir_work(uid, zip_name))  # delete the static-folder
+            remove(zip_path)  # delete the zip-archive
+            rmdir(dir_work(uid, zip_name))  # delete the static-folder
     except Exception as e:
-        msg.reply("Error in zipping: {e}........Please try again later.")
+        msg.reply(f"Error in zipping: {e}........Please try again later.")
         logger.error(f"Error in stop_zip: {e}")
+
+
         
 if __name__ == '__main__':
     try:
