@@ -26,10 +26,7 @@ app = Client("zipBot", app_id, app_key, bot_token=token)
 def start(client, msg: types.Message):
     """Reply start message and add the user to database"""
     try:
-        if msg.from_user is None:
-            msg.reply("An error occurred. Please try again later.")
-            return
-
+        
         uid = msg.from_user.id
         with db_session:
             if not User.get(uid=uid):
