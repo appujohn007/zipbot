@@ -34,6 +34,13 @@ def format_speed_and_eta(speed, eta):
     eta_str = f"{eta // 60:.0f} min {eta % 60:.0f} sec" if eta >= 60 else f"{eta:.0f} sec"
     return speed_str, eta_str
 
+def format_size(size):
+    """Format size to display in KB, MB, or GB"""
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if size < 1024:
+            return f"{size:.2f} {unit}"
+        size /= 1024
+
 # Controls how often the progress bar updates
 UPDATE_INTERVAL = 3  # Update every 3 seconds
 
@@ -44,8 +51,11 @@ def download_progress(current, total, msg: Message, start_time, last_update=[0])
     progress = current / total * 100
     eta = (total - current) / speed
     speed_str, eta_str = format_speed_and_eta(speed, eta)
+    size_str = format_size(total)
 
     new_content = (f"**Download progress: {progress:.1f}%**\n"
+                   f"Size: {size_str}\n"
+                   f"Downloaded: {format_size(current)}\n"
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
     
@@ -66,8 +76,11 @@ def up_progress(current, total, msg: Message, start_time, last_update=[0]):
     progress = current / total * 100
     eta = (total - current) / speed
     speed_str, eta_str = format_speed_and_eta(speed, eta)
+    size_str = format_size(total)
 
     new_content = (f"**Upload progress: {progress:.1f}%**\n"
+                   f"Size: {size_str}\n"
+                   f"Uploaded: {format_size(current)}\n"
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
     
