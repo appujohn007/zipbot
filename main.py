@@ -5,6 +5,7 @@ from zipfile import ZipFile
 from os import remove, rmdir, mkdir
 from utils import zip_work, dir_work, up_progress, list_dir, db_session, User, commit, download_progress
 import time
+import shutil
 
 
 from scripts import help_text, start_text, invalid_cmd
@@ -27,8 +28,6 @@ app = Client("zipBot", app_id, app_key, bot_token=token)
 error_channel_id = -1002030156196
 
 
-def forward_error_to_channel(error_message: str):
-    app.forward_messages(chat_id=error_channel_id, from_chat_id=app.get_me().id, message_ids=error_message)
 
 
 @app.on_message(filters.command("start"))
@@ -99,8 +98,8 @@ def start_zip(client, msg: types.Message):
         """)
         
     except Exception as e:
-        error_message = f"Error in start_zip: {e}"
-        forward_error_to_channel(error_message)
+      #  error_message = f"Error in start_zip: {e}"
+    #    forward_error_to_channel(error_message)
         logger.error(f"Error in start_zip: {e}")
         msg.reply(f"Error in zipping: {e}")
 
@@ -200,7 +199,7 @@ def stop_zip(client, msg: types.Message):
                 if os.path.isdir(subdir_path):
                     shutil.rmtree(subdir_path)
     except Exception as e:
-        error_message = f"Error in stop_zip: {e}"
+     #   error_message = f"Error in stop_zip: {e}"
        # forward_error_to_channel(error_message)
         msg.reply(f"Error in zipping: {e}........Please try again later.")
         logger.error(f"Error in stop_zip: {e}")
