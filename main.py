@@ -96,6 +96,7 @@ def start_zip(client, msg: types.Message):
 
 
 
+
 @app.on_message(filters.media)
 def enter_files(client, msg: types.Message):
     """Download files"""
@@ -118,12 +119,14 @@ def enter_files(client, msg: types.Message):
                     # Delete the download progress message after download completion
                     downsts.delete()
 
+                    # Send a confirmation message indicating the file was downloaded
+                    file_name = file_type.file_name if file_type else "The file"
+                    msg.reply(f"{file_name} was downloaded.")
             else:
-                msg.reply("Sorry, You Haven't initiated the zipping process. Please use /zip command to start the zipping process.")
+                msg.reply("Sorry, you haven't initiated the zipping process. Please use the /zip command to start the zipping process.")
     except Exception as e:
         msg.reply(f"An error occurred. Please try again later.\n\nError in enter_files: {e}")
         logger.error(f"Error in enter_files: {e}")
-
 
 
 
