@@ -129,8 +129,6 @@ def enter_files(client, msg: types.Message):
 
 # Start to make zip
 @app.on_message(filters.command("done"))
-def s# Start to make zip
-@app.on_message(filters.command("done"))
 def stop_zip(client, msg: types.Message):
     """Exit from insert mode and send the archive"""
     try:
