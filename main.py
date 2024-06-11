@@ -76,8 +76,6 @@ def start_zip(client, msg: types.Message):
         msg.reply(f"Error in zipping: {e}")
 
 
-@app.on_message(filters.text & filters.private)
-import os
 
 @app.on_message(filters.text & filters.private)
 def set_zip_name(client, msg: types.Message):
