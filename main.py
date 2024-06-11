@@ -75,7 +75,7 @@ eg: `/zip iodevs`
 
 Join [.io devs](https://t.me/botio_devs) to support me
 """
-        msg.reply(help_text, parse_mode=enums.ParseMode.MARKDOWN)
+        msg.reply(help_text, parse_mode=enums.ParseMode.MARKDOWN, disable_web_page_preview=True)
     except Exception as e:
         logger.error(f"Error in start: {e}")
         msg.reply("An error occurred. Please try again later.") 
