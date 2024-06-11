@@ -44,8 +44,8 @@ def format_size(size):
 def format_progress_bar(progress, length=20):
     """Creates a progress bar with the specified length"""
     filled_length = int(length * progress // 100)
-    bar = '⬤' * filled_length + '○' * (length - filled_length)
-    return f"[{bar}]"
+    bar = '▰' * filled_length + '▱' * (length - filled_length)
+    return f"⬳{bar}⟿"
 
 # Controls how often the progress bar updates
 UPDATE_INTERVAL = 3  # Update every 3 seconds
@@ -61,12 +61,11 @@ def download_progress(current, total, msg: Message, start_time, last_update=[0])
     downloaded_str = format_size(current)
     progress_bar = format_progress_bar(progress)
 
-    new_content = (f"**Download progress: {progress:.1f}%**\n"
-                   f"{progress_bar}\n"
-                   f"Size: {size_str}\n"
-                   f"Downloaded: {downloaded_str}\n"
-                   f"Speed: {speed_str}\n"
-                   f"ETA: {eta_str}")
+    new_content = ("𝕯𝖔𝖜𝖓𝖑𝖔𝖆𝖉𝖎𝖓𝖌\n"
+                   f"{progress:.1f}%\n{progress_bar}\n"
+                   f"**⌨️ ᴘʀᴏɢʀᴇss: {downloaded_str}\{size_str}**\n"
+                   f"**🚀 sᴘᴇᴇᴅ: {speed_str}**\n"
+                   f"**⏳ ᴇᴛᴀ: {eta_str}**")
     
     current_time = time.time()
     if current_time - last_update[0] >= UPDATE_INTERVAL:
@@ -89,12 +88,11 @@ def up_progress(current, total, msg: Message, start_time, last_update=[0]):
     uploaded_str = format_size(current)
     progress_bar = format_progress_bar(progress)
 
-    new_content = (f"**Upload progress: {progress:.1f}%**\n"
-                   f"{progress_bar}\n"
-                   f"Size: {size_str}\n"
-                   f"Uploaded: {uploaded_str}\n"
-                   f"Speed: {speed_str}\n"
-                   f"ETA: {eta_str}")
+    new_content = ("𝖀𝖕𝖑𝖔𝖆𝖉𝖎𝖓𝖌\n"
+                   f"**{progress:.1f}%**\n{progress_bar}**\n"
+                   f"**ᴘʀᴏɢʀᴇss: {uploaded_str}\{size_str}**\n"
+                   f"**sᴘᴇᴇᴅ: {speed_str}**\n"
+                   f"**ᴇᴛᴀ: {eta_str}**")
     
     current_time = time.time()
     if current_time - last_update[0] >= UPDATE_INTERVAL:
