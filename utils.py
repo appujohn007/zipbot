@@ -41,10 +41,10 @@ def format_size(size):
             return f"{size:.2f} {unit}"
         size /= 1024
 
-def format_progress_bar(progress, length=20):
+def format_progress_bar(progress, length=10):
     """Creates a progress bar with the specified length"""
     filled_length = int(length * progress // 100)
-    bar = '█' * filled_length + '-' * (length - filled_length)
+    bar = '⬤' * filled_length + '○' * (length - filled_length)
     return f"[{bar}]"
 
 # Controls how often the progress bar updates
@@ -62,7 +62,6 @@ def download_progress(current, total, msg: Message, start_time, last_update=[0])
 
     new_content = (f"**Download progress: {progress:.1f}%**\n"
                    f"{progress_bar}\n"
-                   f"Size: {size_str}\n"
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
     
@@ -88,7 +87,6 @@ def up_progress(current, total, msg: Message, start_time, last_update=[0]):
 
     new_content = (f"**Upload progress: {progress:.1f}%**\n"
                    f"{progress_bar}\n"
-                   f"Size: {size_str}\n"
                    f"Speed: {speed_str}\n"
                    f"ETA: {eta_str}")
     
