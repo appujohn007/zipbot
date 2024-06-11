@@ -20,7 +20,7 @@ logging.getLogger("pyrogram").setLevel(logging.ERROR)
 # Bot credentials from environment variables
 app_id = int(os.environ.get("API_ID", 10471716))
 app_key = os.environ.get('API_HASH', "f8a1b21a13af154596e2ff5bed164860")
-token = os.environ.get('BOT_TOKEN', "6916875347:AAEVxR4cO_sIBB6V57ANA92pHKxzw9G3yX0")
+token = os.environ.get('BOT_TOKEN', "7227214903:AAF532JDQu3CWdeiqfKoS6aoOTOWfppJILg")
 
 # Initialize the client
 app = Client("zipBot", app_id, app_key, bot_token=token)
