@@ -129,6 +129,8 @@ def enter_files(client, msg: types.Message):
 
 # Start to make zip
 @app.on_message(filters.command("done"))
+def s# Start to make zip
+@app.on_message(filters.command("done"))
 def stop_zip(client, msg: types.Message):
     """Exit from insert mode and send the archive"""
     try:
@@ -171,14 +173,26 @@ def stop_zip(client, msg: types.Message):
                                progress_args=(stsmsg, start_time))
             stsmsg.delete()  # delete the status-msg
             remove(zip_path)  # delete the zip-archive
-            rmdir(dir_work(uid, zip_name))  # delete the static-folder
+            # Delete all subdirectories and their contents within static/{uid}/
+            user_dir = f"static/{uid}/"
+            for subdir in os.listdir(user_dir):
+                subdir_path = os.path.join(user_dir, subdir)
+                if os.path.isdir(subdir_path):
+                    shutil.rmtree(subdir_path)
         except ValueError as e:
             msg.reply(f"An unknown error occurred: {str(e)}")
             remove(zip_path)  # delete the zip-archive
-            rmdir(dir_work(uid, zip_name))  # delete the static-folder
+            # Delete all subdirectories and their contents within static/{uid}/
+            user_dir = f"static/{uid}/"
+            for subdir in os.listdir(user_dir):
+                subdir_path = os.path.join(user_dir, subdir)
+                if os.path.isdir(subdir_path):
+                    shutil.rmtree(subdir_path)
     except Exception as e:
         msg.reply(f"Error in zipping: {e}........Please try again later.")
         logger.error(f"Error in stop_zip: {e}")
+
+
 
 
         
