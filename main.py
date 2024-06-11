@@ -57,15 +57,16 @@ def start_zip(client, msg: types.Message):
 
         # Clear and recreate the user's directory
         try:
-            mkdir(dir_work(uid))
+            mkdir(dir_work(uid, msg.command[1]))  # Passing zip_name provided by the user
         except FileExistsError:
-            for file in list_dir(uid):
-                remove(dir_work(uid) + file)
-            rmdir(dir_work(uid))
-            mkdir(dir_work(uid))
+            for file in list_dir(uid, msg.command[1]):
+                remove(dir_work(uid, msg.command[1]) + file)
+            rmdir(dir_work(uid, msg.command[1]))
+            mkdir(dir_work(uid, msg.command[1]))
     except Exception as e:
         logger.error(f"Error in start_zip: {e}")
         msg.reply(f"Error in zipping: {e}")
+
 
 @app.on_message(filters.text & filters.private)
 def set_zip_name(client, msg: types.Message):
