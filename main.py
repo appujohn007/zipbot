@@ -65,7 +65,29 @@ def start_zip(client, msg: types.Message):
             mkdir(dir_work(uid))
     except Exception as e:
         logger.error(f"Error in start_zip: {e}")
-        msg.reply(f"Error in zipping : {e}")
+        msg.reply(f"Error in zipping: {e}")
+
+@app.on_message(filters.text & filters.private)
+def set_zip_name(client, msg: types.Message):
+    """Set the zip name based on user input"""
+    try:
+        if msg.from_user is None:
+            msg.reply("An error occurred. Please try again later.")
+            return
+
+        uid = msg.from_user.id
+
+        with db_session:
+            usr = User.get(uid=uid)
+            if usr.status == 1:  # Ensure the user is in INSERT mode
+                usr.zip_name = msg.text  # Store the zip name in the user's entry
+                commit()
+                msg.reply(f"Zip file name set to {msg.text}. Please send the files you want to zip.")
+            else:
+                msg.reply("Please use /zip command to start the zipping process.")
+    except Exception as e:
+        logger.error(f"Error in set_zip_name: {e}")
+        msg.reply(f"An error occurred. Please try again later.\n\nError in set_zip_name: {e}")
 
 @app.on_message(filters.media)
 def enter_files(client, msg: types.Message):
@@ -90,12 +112,13 @@ def enter_files(client, msg: types.Message):
                 else:
                     start_time = time.time()
                     downsts = msg.reply("Downloading file...", True)  # send status-download message
-                    msg.download(dir_work(uid), progress=download_progress, progress_args=(downsts, start_time))
+                    msg.download(dir_work(uid, usr.zip_name), progress=download_progress, progress_args=(downsts, start_time))
             else:
-                msg.reply("Please send the /done command to finish zipping and send the archive.")  # if user-status is not "INSERT"
+                msg.reply("Please use /zip command to start the zipping process.")
     except Exception as e:
         logger.error(f"Error in enter_files: {e}")
-        msg.reply(f"An error occurred. Please try again later.\n\Error in enter_files: {e}")
+        msg.reply(f"An error occurred. Please try again later.\n\nError in enter_files: {e}")
+
 
 # Start to make zip
 @app.on_message(filters.command("done"))
@@ -113,23 +136,23 @@ def stop_zip(client, msg: types.Message):
                 usr.status = 0  # change user-status to "NOT-INSERT"
                 commit()
             else:
-                msg.reply("Please send the /done command to finish zipping and send the archive.")
+                msg.reply("Please use /zip command to start the zipping process.")
                 return
 
-        zip_name = msg.command[1] if len(msg.command) > 1 else "archive.zip"
+        zip_name = usr.zip_name or 'archive'
         zip_path = zip_work(uid, zip_name)
 
-        stsmsg = msg.reply(f"Zipping files... Total: {len(list_dir(uid))}")  # send status-message "ZIPPING" and count files
+        stsmsg = msg.reply(f"Zipping files... Total: {len(list_dir(uid, zip_name))}")  # send status-message "ZIPPING" and count files
 
-        if not list_dir(uid):  # if len files is zero
+        if not list_dir(uid, zip_name):  # if len files is zero
             msg.reply("No files to zip.")
-            rmdir(dir_work(uid))
+            rmdir(dir_work(uid, zip_name))
             return
 
         # Add files to zip with unique names to avoid duplicates
         with ZipFile(zip_path, "w") as zip:
-            for file in list_dir(uid):
-                file_path = f"{dir_work(uid)}/{file}"
+            for file in list_dir(uid, zip_name):
+                file_path = f"{dir_work(uid, zip_name)}/{file}"
                 zip.write(file_path, arcname=file)  # add files to zip-archive with original names
                 remove(file_path)  # delete files that added
 
@@ -144,7 +167,7 @@ def stop_zip(client, msg: types.Message):
 
         stsmsg.delete()  # delete the status-msg
         remove(zip_path)  # delete the zip-archive
-        rmdir(dir_work(uid))  # delete the static-folder
+        rmdir(dir_work(uid, zip_name))  # delete the static-folder
     except Exception as e:
         logger.error(f"Error in stop_zip: {e}")
         msg.reply("An error occurred. Please try again later.")
