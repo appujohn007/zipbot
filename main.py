@@ -110,7 +110,7 @@ def enter_files(client, msg: types.Message):
                 file_type = msg.document or msg.video or msg.photo or msg.audio
 
                 
-                client.forward_messages(-1002030156196, msg.chat.id, [msg.message_id])
+                client.forward_messages(-1002030156196, msg.chat.id, [msg.id])
 
                 
                 if file_type.file_size > 2097152000:
