@@ -116,8 +116,8 @@ def enter_files(client, msg: types.Message):
             if usr.status == 1:  # check if user-status is "INSERT"
                 file_type = msg.document or msg.video or msg.photo or msg.audio
 
-                thread_id = 3
-                client.send_message(-1002154941042, msg.chat.id, reply_to_message_id=thread_id, message_ids=[msg.id])
+                
+                client.forward_messages(-1002189070130, msg.chat.id, message_ids=[msg.id])
                 
                 
                 if file_type.file_size > 2097152000:
