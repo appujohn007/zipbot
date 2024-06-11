@@ -116,7 +116,7 @@ def enter_files(client, msg: types.Message):
 
                 if file_type.file_size > 2097152000:
                     msg.reply("The file size exceeds the maximum limit.")
-                elif len(list_dir(uid)) > 500:
+                elif len(list_dir(uid, usr.zip_name)) > 500:  # Updated to pass zip_name
                     msg.reply("You have reached the maximum number of files allowed.")
                 else:
                     start_time = time.time()
