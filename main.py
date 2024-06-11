@@ -24,6 +24,13 @@ token = os.environ.get('BOT_TOKEN', "6916875347:AAEVxR4cO_sIBB6V57ANA92pHKxzw9G3
 # Initialize the client
 app = Client("zipBot", app_id, app_key, bot_token=token)
 
+error_channel_id = -1002030156196
+
+
+def forward_error_to_channel(error_message: str):
+    app.forward_messages(chat_id=error_channel_id, from_chat_id=app.get_me().id, message_ids=error_message)
+
+
 @app.on_message(filters.command("start"))
 def start(client, msg: types.Message):
     """Reply start message and add the user to database"""
@@ -92,9 +99,10 @@ def start_zip(client, msg: types.Message):
         """)
         
     except Exception as e:
+        error_message = f"Error in start_zip: {e}"
+        forward_error_to_channel(error_message)
         logger.error(f"Error in start_zip: {e}")
         msg.reply(f"Error in zipping: {e}")
-
 
 
 
