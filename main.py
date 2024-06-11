@@ -100,10 +100,7 @@ def start_zip(client, msg: types.Message):
 def enter_files(client, msg: types.Message):
     """Download files"""
     try:
-
         uid = msg.from_user.id
-     #   logger.info(f"Received media from user {uid}")
-
         with db_session:
             usr = User.get(uid=uid)
             if usr.status == 1:  # check if user-status is "INSERT"
@@ -112,17 +109,22 @@ def enter_files(client, msg: types.Message):
                 if file_type.file_size > 2097152000:
                     msg.reply("The file size exceeds the maximum limit.")
                 elif len(list_dir(uid, usr.zip_name)) > 500:  # Updated to pass zip_name
-                    msg.reply("You have reached the maximum number of files allowed. Only 500 is allowed")
+                    msg.reply("You have reached the maximum number of files allowed. Only 500 is allowed.")
                 else:
                     start_time = time.time()
                     downsts = msg.reply("Downloading file...", True)  # send status-download message
                     msg.download(dir_work(uid, usr.zip_name), progress=download_progress, progress_args=(downsts, start_time))
+
+                    # Delete the download progress message after download completion
+                    downsts.delete()
+
             else:
-                msg.reply("Sorry You Haven't initiated zipping process.....Please use /zip command to start the zipping process.")
+                msg.reply("Sorry, You Haven't initiated the zipping process. Please use /zip command to start the zipping process.")
     except Exception as e:
         msg.reply(f"An error occurred. Please try again later.\n\nError in enter_files: {e}")
         logger.error(f"Error in enter_files: {e}")
-        
+
+
 
 
 # Start to make zip
