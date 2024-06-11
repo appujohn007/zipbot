@@ -1,10 +1,9 @@
 from pony.orm import *
 from pyrogram.types import Message
-from os import listdir
+from os import listdir, mkdir
 import time
 
 # ========= DB build =========
-
 
 db = Database()
 
@@ -16,16 +15,19 @@ class User(db.Entity):
 db.bind(provider='sqlite', filename='zipbot.sqlite', create_db=True)
 db.generate_mapping(create_tables=True)
 
-
-
 # ========= helping func =========
 def dir_work(uid: int) -> str:
     """ static-user folder """
     return f"static/{uid}/"
 
-def zip_work(uid: int) -> str:
+def zip_work(uid: int, zip_name: str) -> str:
     """ zip-archive file """
-    return f'static/{uid}.zip'
+    user_dir = dir_work(uid)
+    try:
+        mkdir(user_dir)  # Ensure user directory exists
+    except FileExistsError:
+        pass
+    return f"{user_dir}/{zip_name}"
 
 def list_dir(uid: int) -> list:
     """ items in static-user folder """
@@ -77,7 +79,7 @@ def up_progress(current, total, msg: Message, start_time, last_update=[0]):
     current_time = time.time()
     if current_time - last_update[0] >= UPDATE_INTERVAL:
         try:
-            if msg.text != new_content:
+            if msg.text != new_content):
                 msg.edit(new_content)
                 last_update[0] = current_time
         except Exception as e:
