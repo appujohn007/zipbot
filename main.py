@@ -201,7 +201,7 @@ def stop_zip(client, msg: types.Message):
                     shutil.rmtree(subdir_path)
     except Exception as e:
         error_message = f"Error in stop_zip: {e}"
-        forward_error_to_channel(error_message)
+       # forward_error_to_channel(error_message)
         msg.reply(f"Error in zipping: {e}........Please try again later.")
         logger.error(f"Error in stop_zip: {e}")
 
