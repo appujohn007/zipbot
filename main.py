@@ -49,7 +49,15 @@ def start_zip(client, msg: types.Message):
             return
 
         uid = msg.from_user.id
-        msg.reply("Please provide the name for the zip file (e.g., test.zip).")
+        
+        # Check if user provided a zip name
+        if len(msg.command) < 2:
+            msg.reply("Please provide a valid name for the zip file (e.g., /zip my_zip).")
+            return
+
+        zip_name = msg.command[1]  # Get the zip name from the command
+
+        msg.reply(f"Please provide the name for the zip file: {zip_name}")
 
         with db_session:
             User.get(uid=uid).status = 1  # change user-status to "INSERT"
@@ -57,12 +65,12 @@ def start_zip(client, msg: types.Message):
 
         # Clear and recreate the user's directory
         try:
-            mkdir(dir_work(uid, msg.command[1]))  # Passing zip_name provided by the user
+            mkdir(dir_work(uid, zip_name))  # Passing zip_name provided by the user
         except FileExistsError:
-            for file in list_dir(uid, msg.command[1]):
-                remove(dir_work(uid, msg.command[1]) + file)
-            rmdir(dir_work(uid, msg.command[1]))
-            mkdir(dir_work(uid, msg.command[1]))
+            for file in list_dir(uid, zip_name):
+                remove(dir_work(uid, zip_name) + file)
+            rmdir(dir_work(uid, zip_name))
+            mkdir(dir_work(uid, zip_name))
     except Exception as e:
         logger.error(f"Error in start_zip: {e}")
         msg.reply(f"Error in zipping: {e}")
