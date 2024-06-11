@@ -34,8 +34,12 @@ def start(client, msg: types.Message):
             if not User.get(uid=uid):
                 User(uid=uid, status=0)  # Initializing the user on database
                 commit()
-
-        msg.reply("Welcome! You can use /zip command to start zipping files.")
+        start_text = """
+Hello Iam a Advanced Telegram bot to make zip files
+How to use me?
+Send /help to see 🙂
+"""
+        msg.reply(start_text)
     except Exception as e:
         logger.error(f"Error in start: {e}")
         msg.reply("An error occurred. Please try again later.")
