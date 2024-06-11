@@ -77,6 +77,9 @@ def start_zip(client, msg: types.Message):
 
 
 @app.on_message(filters.text & filters.private)
+import os
+
+@app.on_message(filters.text & filters.private)
 def set_zip_name(client, msg: types.Message):
     """Set the zip name based on user input"""
     try:
@@ -89,14 +92,21 @@ def set_zip_name(client, msg: types.Message):
         with db_session:
             usr = User.get(uid=uid)
             if usr.status == 1:  # Ensure the user is in INSERT mode
-                usr.zip_name = msg.text  # Store the zip name in the user's entry
+                zip_name = msg.text
+                usr.zip_name = zip_name  # Store the zip name in the user's entry
                 commit()
-                msg.reply(f"Zip file name set to {msg.text}. Please send the files you want to zip.")
+                msg.reply(f"Zip file name set to {zip_name}. Please send the files you want to zip.")
+                
+                # Create directory if it doesn't exist
+                user_dir = dir_work(uid, zip_name)
+                if not os.path.exists(user_dir):
+                    os.makedirs(user_dir)
             else:
                 msg.reply("Please use /zip command to start the zipping process.")
     except Exception as e:
         logger.error(f"Error in set_zip_name: {e}")
         msg.reply(f"An error occurred. Please try again later.\n\nError in set_zip_name: {e}")
+
 
 @app.on_message(filters.media)
 def enter_files(client, msg: types.Message):
