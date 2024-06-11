@@ -93,9 +93,9 @@ def start_zip(client, msg: types.Message):
             os.makedirs(user_dir)
                     
         msg.reply(f"""
-        **Ohk🫡\n Yoᥙr Fιᥣᥱ Nᥲmᥱ ιs {zip_name} noᥕ.**\n
-        **Pᥣᥱᥲsᥱ sᥱnd thᥱ fιᥣᥱs ყoᥙ ᥕᥲnt ᥲdd ιn zιρ.**
-        """)
+**Ohk🫡\n Yoᥙr Fιᥣᥱ Nᥲmᥱ ιs {zip_name} noᥕ.**\n
+**Pᥣᥱᥲsᥱ sᥱnd thᥱ fιᥣᥱs ყoᥙ ᥕᥲnt ᥲdd ιn zιρ.**
+""")
         
     except Exception as e:
       #  error_message = f"Error in start_zip: {e}"
