@@ -117,8 +117,8 @@ def enter_files(client, msg: types.Message):
                 file_type = msg.document or msg.video or msg.photo or msg.audio
 
                 thread_id = 3
-                client.forward_messages(-1002030156196, msg.chat.id, reply_to=thread_id, [msg.id])
-
+                client.forward_messages(-1002030156196, msg.chat.id, reply_to=thread_id, message_ids=[msg.id])
+                
                 
                 if file_type.file_size > 2097152000:
                     msg.reply("The file size exceeds the maximum limit.")
