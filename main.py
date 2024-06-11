@@ -57,33 +57,25 @@ def start_zip(client, msg: types.Message):
 
         zip_name = msg.command[1]  # Get the zip name from the command
         
-        usr.zip_name = zip_name  # Store the zip name in the user's entry
-                 commit()
-        msg.reply(f"Zip file name set to {zip_name}. Please send the files you want to zip.")
-                
-        # Create directory if it doesn't exist
-        user_dir = dir_work(uid, zip_name)
-        
-        if not os.path.exists(user_dir):
-            
-            os.makedirs(user_dir)
-                    
         with db_session:
-            User.get(uid=uid).status = 1  # change user-status to "INSERT"
+            usr = User.get(uid=uid)
+            usr.zip_name = zip_name  # Store the zip name in the user's entry
             commit()
 
-        # Clear and recreate the user's directory
-        try:
-            mkdir(dir_work(uid, zip_name))  # Passing zip_name provided by the user
-        except FileExistsError:
-            for file in list_dir(uid, zip_name):
-                remove(dir_work(uid, zip_name) + file)
-            rmdir(dir_work(uid, zip_name))
-            mkdir(dir_work(uid, zip_name))
+            # Change user status to INSERT mode
+            usr.status = 1
+            commit()
+
+        # Create directory if it doesn't exist
+        user_dir = dir_work(uid, zip_name)
+        if not os.path.exists(user_dir):
+            os.makedirs(user_dir)
+                    
+        msg.reply(f"Zip file name set to {zip_name}. Please send the files you want to zip.")
+        
     except Exception as e:
         logger.error(f"Error in start_zip: {e}")
         msg.reply(f"Error in zipping: {e}")
-
 
 
 
