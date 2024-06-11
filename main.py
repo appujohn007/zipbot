@@ -126,12 +126,12 @@ def enter_files(client, msg: types.Message):
                     msg.reply("You have reached the maximum number of files allowed. Only 500 is allowed.")
                 else:
                     start_time = time.time()
-                    downsts = msg.reply("Downloading file...", True)  # send status-download message
+                    downsts = msg.reply("Dօառʟօǟɖɨռɢ........", True)  # send status-download message
                     msg.download(dir_work(uid, usr.zip_name), progress=download_progress, progress_args=(downsts, start_time))
 
                     # Update the download progress message to indicate completion
                     file_name = file_type.file_name if file_type else "The file"
-                    downsts.edit(f"***𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍𝚎𝚍 \n`{file_name}`***", parse_mode=enums.ParseMode.MARKDOWN)
+                    downsts.edit(f"**𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍𝚎𝚍 \n`{file_name}`**", parse_mode=enums.ParseMode.MARKDOWN)
             else:
                 msg.reply("Sorry, you haven't initiated the zipping process. Please use the /zip command to start the zipping process.")
     except Exception as e:
