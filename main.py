@@ -93,8 +93,8 @@ def start_zip(client, msg: types.Message):
             os.makedirs(user_dir)
                     
         msg.reply(f"""
-        Your file name is {zip_name} now. 
-        Please send the files you want to zip.
+        **Ohk🫡\n Yoᥙr Fιᥣᥱ Nᥲmᥱ ιs {zip_name} noᥕ.**\n
+        **Pᥣᥱᥲsᥱ sᥱnd thᥱ fιᥣᥱs ყoᥙ ᥕᥲnt ᥲdd ιn zιρ.**
         """)
         
     except Exception as e:
