@@ -6,6 +6,7 @@ from os import remove, rmdir, mkdir
 from utils import zip_work, dir_work, up_progress, list_dir, db_session, User, commit, download_progress
 import time
 
+from scripts import help_text, start_text, invalid_cmd
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
