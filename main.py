@@ -42,26 +42,26 @@ def start(client, msg: types.Message):
 
 @app.on_message(filters.command("zip"))
 def start_zip(client, msg: types.Message):
-    """Starting get files to archive"""
+    """Ask for zip name and initialize the folder"""
     try:
         if msg.from_user is None:
             msg.reply("An error occurred. Please try again later.")
             return
 
         uid = msg.from_user.id
-
-        msg.reply("Please send the files you want to zip.")
+        msg.reply("Please provide the name for the zip file (e.g., test.zip).")
 
         with db_session:
             User.get(uid=uid).status = 1  # change user-status to "INSERT"
             commit()
 
+        # Clear and recreate the user's directory
         try:
-            mkdir(dir_work(uid))  # create static-folder for user
-        except FileExistsError:  # in case the folder already exists
+            mkdir(dir_work(uid))
+        except FileExistsError:
             for file in list_dir(uid):
-                remove(dir_work(uid) + file)  # delete all files from folder
-            rmdir(dir_work(uid))  # delete folder
+                remove(dir_work(uid) + file)
+            rmdir(dir_work(uid))
             mkdir(dir_work(uid))
     except Exception as e:
         logger.error(f"Error in start_zip: {e}")
@@ -107,11 +107,6 @@ def stop_zip(client, msg: types.Message):
             return
 
         uid = msg.from_user.id
-        if len(msg.command) == 1:
-            zip_path = zip_work(uid)
-        else:
-            zip_path = "static/" + msg.command[1]  # custom zip-file name
-
         with db_session:
             usr = User.get(uid=uid)
             if usr.status == 1:
@@ -120,6 +115,9 @@ def stop_zip(client, msg: types.Message):
             else:
                 msg.reply("Please send the /done command to finish zipping and send the archive.")
                 return
+
+        zip_name = msg.command[1] if len(msg.command) > 1 else "archive.zip"
+        zip_path = zip_work(uid, zip_name)
 
         stsmsg = msg.reply(f"Zipping files... Total: {len(list_dir(uid))}")  # send status-message "ZIPPING" and count files
 
