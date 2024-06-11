@@ -32,11 +32,7 @@ def start(client, msg: types.Message):
             if not User.get(uid=uid):
                 User(uid=uid, status=0)  # Initializing the user on database
                 commit()
-        start_text = """
-Hello Iam a Advanced Telegram bot to make zip files
-How to use me?
-Send /help to see 🙂
-"""
+        
         msg.reply(start_text)
     except Exception as e:
         logger.error(f"Error in start: {e}")
@@ -49,29 +45,7 @@ Send /help to see 🙂
 def start(client, msg: types.Message):
     """Reply start message and add the user to database"""
     try:
-        if msg.from_user is None:
-            msg.reply("An error occurred. Please try again later.")
-            return
-
         
-        help_text = """
-WHAT I CAN DO
-
-*I Can make Zips
-* Supports various medias Like Video, Images, Documents, pdf, apk and many more
-
-HOW TO USE ME
-
-* Send /zip command along with your name for the zip without .zip extension
-eg: `/zip iodevs`
-*After That Send The files which you want to include in the zip
-* Then Patiently wait for the downloading to be completed
-* Then Send /done to start making zipa with the files
-
-======================
-
-Join [.io devs](https://t.me/botio_devs) to support me
-"""
         msg.reply(help_text, parse_mode=enums.ParseMode.MARKDOWN, disable_web_page_preview=True)
     except Exception as e:
         logger.error(f"Error in start: {e}")
@@ -82,7 +56,6 @@ Join [.io devs](https://t.me/botio_devs) to support me
 
 @app.on_message(filters.command("zip"))
 def start_zip(client, msg: types.Message):
-    """Ask for zip name and initialize the folder"""
     try:
         if msg.from_user is None:
             msg.reply("An error occurred. Please try again later.")
@@ -92,7 +65,7 @@ def start_zip(client, msg: types.Message):
         
         # Check if user provided a zip name
         if len(msg.command) < 2:
-            msg.reply("Please provide a valid name for the zip file (e.g., /zip my_zip).")
+            msg.reply(invalid_cmd)
             return
 
         zip_name = msg.command[1]  # Get the zip name from the command
@@ -111,7 +84,10 @@ def start_zip(client, msg: types.Message):
         if not os.path.exists(user_dir):
             os.makedirs(user_dir)
                     
-        msg.reply(f"Zip file name set to {zip_name}. Please send the files you want to zip.")
+        msg.reply(f"""
+        Your file name is {zip_name} now. 
+        Please send the files you want to zip.
+        """)
         
     except Exception as e:
         logger.error(f"Error in start_zip: {e}")
@@ -123,12 +99,9 @@ def start_zip(client, msg: types.Message):
 def enter_files(client, msg: types.Message):
     """Download files"""
     try:
-        if msg.from_user is None:
-            msg.reply("An error occurred. Please try again later.")
-            return
 
         uid = msg.from_user.id
-        logger.info(f"Received media from user {uid}")
+     #   logger.info(f"Received media from user {uid}")
 
         with db_session:
             usr = User.get(uid=uid)
@@ -138,16 +111,17 @@ def enter_files(client, msg: types.Message):
                 if file_type.file_size > 2097152000:
                     msg.reply("The file size exceeds the maximum limit.")
                 elif len(list_dir(uid, usr.zip_name)) > 500:  # Updated to pass zip_name
-                    msg.reply("You have reached the maximum number of files allowed.")
+                    msg.reply("You have reached the maximum number of files allowed. Only 500 is allowed")
                 else:
                     start_time = time.time()
                     downsts = msg.reply("Downloading file...", True)  # send status-download message
                     msg.download(dir_work(uid, usr.zip_name), progress=download_progress, progress_args=(downsts, start_time))
             else:
-                msg.reply("Please use /zip command to start the zipping process.")
+                msg.reply("Sorry You Haven't initiated zipping process.....Please use /zip command to start the zipping process.")
     except Exception as e:
-        logger.error(f"Error in enter_files: {e}")
         msg.reply(f"An error occurred. Please try again later.\n\nError in enter_files: {e}")
+        logger.error(f"Error in enter_files: {e}")
+        
 
 
 # Start to make zip
@@ -166,16 +140,16 @@ def stop_zip(client, msg: types.Message):
                 usr.status = 0  # change user-status to "NOT-INSERT"
                 commit()
             else:
-                msg.reply("Please use /zip command to start the zipping process.")
+                msg.reply("Sorry You Haven't Initiated zipping process......Please use /zip command to start the zipping process.")
                 return
 
-        zip_name = usr.zip_name or 'archive'
+        zip_name = usr.zip_name or 'iozip'
         zip_path = zip_work(uid, zip_name)
 
         stsmsg = msg.reply(f"Zipping files... Total: {len(list_dir(uid, zip_name))}")  # send status-message "ZIPPING" and count files
 
         if not list_dir(uid, zip_name):  # if len files is zero
-            msg.reply("No files to zip.")
+            msg.reply("No files to zip. start your process again......")
             rmdir(dir_work(uid, zip_name))
             return
 
@@ -199,9 +173,9 @@ def stop_zip(client, msg: types.Message):
         remove(zip_path)  # delete the zip-archive
         rmdir(dir_work(uid, zip_name))  # delete the static-folder
     except Exception as e:
+        msg.reply("Error in zipping: {e}........Please try again later.")
         logger.error(f"Error in stop_zip: {e}")
-        msg.reply("An error occurred. Please try again later.")
-
+        
 if __name__ == '__main__':
     try:
         mkdir("static")  # create static files folder
