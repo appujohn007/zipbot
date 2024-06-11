@@ -184,7 +184,7 @@ def stop_zip(client, msg: types.Message):
 
 ᒍσιη [.ｉｏ ｄｅｖｓ](https://t.me/botio_devs)
 """
-            sent_msg = msg.reply_document(zip_path, progress=up_progress, caption=caption, parse_mode=enums.ParseMode.MARKDOWN # send the zip-archive
+            sent_msg = msg.reply_document(zip_path, progress=up_progress, caption=caption, parse_mode=enums.ParseMode.MARKDOWN, # send the zip-archive
                                progress_args=(stsmsg, start_time))
             stsmsg.delete()  # delete the status-msg
             remove(zip_path)  # delete the zip-archive
