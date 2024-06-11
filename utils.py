@@ -41,7 +41,7 @@ def format_size(size):
             return f"{size:.2f} {unit}"
         size /= 1024
 
-def format_progress_bar(progress, length=10):
+def format_progress_bar(progress, length=20):
     """Creates a progress bar with the specified length"""
     filled_length = int(length * progress // 100)
     bar = '⬤' * filled_length + '○' * (length - filled_length)
