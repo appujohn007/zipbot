@@ -1,7 +1,7 @@
+import time
+import os
 from pony.orm import *
 from pyrogram.types import Message
-from os import listdir, mkdir
-import time
 
 # ========= DB build =========
 
@@ -16,6 +16,7 @@ db.bind(provider='sqlite', filename='zipbot.sqlite', create_db=True)
 db.generate_mapping(create_tables=True)
 
 # ========= helping func =========
+
 def dir_work(uid: int, zip_name: str) -> str:
     """ static-user folder """
     return f"static/{uid}/{zip_name}/"
@@ -26,7 +27,7 @@ def zip_work(uid: int, zip_name: str) -> str:
 
 def list_dir(uid: int, zip_name: str) -> list:
     """ items in static-user folder """
-    return listdir(dir_work(uid, zip_name))
+    return os.listdir(dir_work(uid, zip_name))
 
 def format_speed_and_eta(speed, eta):
     """Format speed to display in KB/s or MB/s and ETA in minutes and seconds"""
@@ -50,7 +51,7 @@ def format_progress_bar(progress, length=20):
 # Controls how often the progress bar updates
 UPDATE_INTERVAL = 3  # Update every 3 seconds
 
-def download_progress(current, total, msg: Message, start_time, last_update=[0]):
+async def download_progress(current, total, msg: Message, start_time, last_update=[0]):
     """ edit status-msg with progress of the downloading """
     elapsed_time = time.time() - start_time
     speed = current / elapsed_time
@@ -71,13 +72,13 @@ def download_progress(current, total, msg: Message, start_time, last_update=[0])
     if current_time - last_update[0] >= UPDATE_INTERVAL:
         try:
             if msg.text != new_content:
-                msg.edit(new_content)
+                await msg.edit_text(new_content)
                 last_update[0] = current_time
         except Exception as e:
             # Log the error or handle it as needed
             pass
 
-def up_progress(current, total, msg: Message, start_time, last_update=[0]):
+async def up_progress(current, total, msg: Message, start_time, last_update=[0]):
     """ edit status-msg with progress of the uploading """
     elapsed_time = time.time() - start_time
     speed = current / elapsed_time
@@ -88,8 +89,8 @@ def up_progress(current, total, msg: Message, start_time, last_update=[0]):
     uploaded_str = format_size(current)
     progress_bar = format_progress_bar(progress)
 
-    new_content = ("**𝖀𝖕𝖑𝖔𝖆𝖉𝖎𝖓𝖌➽ {progress:.1f}%**\n\n"
-                   f"**{progress_bar}**\n"
+    new_content = (f"**𝖀𝖕𝖑𝖔𝖆𝖉𝖎𝖓𝖌➽ {progress:.1f}%**\n\n"
+                   f"{progress_bar}\n"
                    f"**🧑‍🏭 ᴘʀᴏɢʀᴇss: {uploaded_str}\{size_str}**\n"
                    f"**🚀 sᴘᴇᴇᴅ: {speed_str}**\n"
                    f"**⏳ ᴇᴛᴀ: {eta_str}**")
@@ -98,7 +99,7 @@ def up_progress(current, total, msg: Message, start_time, last_update=[0]):
     if current_time - last_update[0] >= UPDATE_INTERVAL:
         try:
             if msg.text != new_content:
-                msg.edit(new_content)
+                await msg.edit_text(new_content)
                 last_update[0] = current_time
         except Exception as e:
             # Log the error or handle it as needed
