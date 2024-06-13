@@ -1,12 +1,12 @@
 import os
 import logging
+import asyncio
 from pyrogram import Client, filters, types, enums
 from zipfile import ZipFile
 from os import remove, rmdir, mkdir
 from utils import zip_work, dir_work, up_progress, list_dir, db_session, User, commit, download_progress
 import time
 import shutil
-import asyncio
 
 from scripts import help_text, start_text, invalid_cmd
 
@@ -25,17 +25,18 @@ token = os.environ.get('BOT_TOKEN', "7227214903:AAF532JDQu3CWdeiqfKoS6aoOTOWfppJ
 # Initialize the client
 app = Client("zipBot", app_id, app_key, bot_token=token)
 
+#error_channel_id = -1002030156196
+
 
 @app.on_message(filters.command("start"))
 async def start(client, msg: types.Message):
     """Reply start message and add the user to database"""
     try:
         uid = msg.from_user.id
-        async with db_session() as session:
-            if not await session.get(User, uid):
-                session.add(User(uid=uid, status=0))
-                await commit()
-
+        with db_session:
+            if not User.get(uid=uid):
+                User(uid=uid, status=0)  # Initializing the user on database
+                commit()
         await msg.reply(start_text)
     except Exception as e:
         logger.error(f"Error in start: {e}")
@@ -43,8 +44,8 @@ async def start(client, msg: types.Message):
 
 
 @app.on_message(filters.command("help"))
-async def help(client, msg: types.Message):
-    """Reply with help message"""
+async def help_command(client, msg: types.Message):
+    """Reply help message"""
     try:
         await msg.reply(help_text, parse_mode=enums.ParseMode.MARKDOWN, disable_web_page_preview=True)
     except Exception as e:
@@ -60,28 +61,33 @@ async def start_zip(client, msg: types.Message):
             return
 
         uid = msg.from_user.id
-
+        
+        # Check if user provided a zip name
         if len(msg.command) < 2:
             await msg.reply(invalid_cmd)
             return
 
-        zip_name = msg.command[1]
+        zip_name = msg.command[1]  # Get the zip name from the command
+        
+        with db_session:
+            usr = User.get(uid=uid)
+            usr.zip_name = zip_name  # Store the zip name in the user's entry
+            commit()
 
-        async with db_session() as session:
-            usr = await session.get(User, uid)
-            usr.zip_name = zip_name
+            # Change user status to INSERT mode
             usr.status = 1
-            await commit()
+            commit()
 
+        # Create directory if it doesn't exist
         user_dir = dir_work(uid, zip_name)
         if not os.path.exists(user_dir):
             os.makedirs(user_dir)
-
+                    
         await msg.reply(f"""
 **Ohk🫡\n Yoᥙr Fιᥣᥱ Nᥲmᥱ ιs {zip_name} noᥕ.**\n
 **Pᥣᥱᥲsᥱ sᥱnd thᥱ fιᥣᥱs ყoᥙ ᥕᥲnt ᥲdd ιn zιρ.**
 """)
-
+        
     except Exception as e:
         logger.error(f"Error in start_zip: {e}")
         await msg.reply(f"Error in zipping: {e}")
@@ -92,22 +98,23 @@ async def enter_files(client, msg: types.Message):
     """Download files"""
     try:
         uid = msg.from_user.id
-        async with db_session() as session:
-            usr = await session.get(User, uid)
-            if usr.status == 1:
+        with db_session:
+            usr = User.get(uid=uid)
+            if usr.status == 1:  # check if user-status is "INSERT"
                 file_type = msg.document or msg.video or msg.photo or msg.audio
 
                 await client.forward_messages(-1002189070130, msg.chat.id, message_ids=[msg.id])
-
+                
                 if file_type.file_size > 2097152000:
                     await msg.reply("The file size exceeds the maximum limit.")
-                elif len(list_dir(uid, usr.zip_name)) > 500:
+                elif len(list_dir(uid, usr.zip_name)) > 500:  # Updated to pass zip_name
                     await msg.reply("You have reached the maximum number of files allowed. Only 500 is allowed.")
                 else:
                     start_time = time.time()
-                    downsts = await msg.reply("Dօառʟօǟɖɨռɢ........")
+                    downsts = await msg.reply("Dօառʟօǟɖɨռɢ........", True)  # send status-download message
                     await msg.download(dir_work(uid, usr.zip_name), progress=download_progress, progress_args=(downsts, start_time))
 
+                    # Update the download progress message to indicate completion
                     file_name = file_type.file_name if file_type else "The file"
                     await downsts.edit(f"**𝙳𝚘𝚠𝚗𝚕𝚘𝚊𝚍𝚎𝚍 \n`{file_name}`**", parse_mode=enums.ParseMode.MARKDOWN)
             else:
@@ -117,6 +124,7 @@ async def enter_files(client, msg: types.Message):
         logger.error(f"Error in enter_files: {e}")
 
 
+# Start to make zip
 @app.on_message(filters.command("done"))
 async def stop_zip(client, msg: types.Message):
     """Exit from insert mode and send the archive"""
@@ -126,11 +134,11 @@ async def stop_zip(client, msg: types.Message):
             return
 
         uid = msg.from_user.id
-        async with db_session() as session:
-            usr = await session.get(User, uid)
+        with db_session:
+            usr = User.get(uid=uid)
             if usr.status == 1:
-                usr.status = 0
-                await commit()
+                usr.status = 0  # change user-status to "NOT-INSERT"
+                commit()
             else:
                 await msg.reply("Sorry You Haven't Initiated zipping process......Please use /zip command to start the zipping process.")
                 return
@@ -138,21 +146,22 @@ async def stop_zip(client, msg: types.Message):
         zip_name = usr.zip_name or 'iozip'
         zip_path = zip_work(uid, zip_name)
 
-        stsmsg = await msg.reply(f"Zipping files... Total: {len(list_dir(uid, zip_name))}")
+        stsmsg = await msg.reply(f"Zipping files... Total: {len(list_dir(uid, zip_name))}")  # send status-message "ZIPPING" and count files
 
-        if not list_dir(uid, zip_name):
+        if not list_dir(uid, zip_name):  # if len files is zero
             await msg.reply("No files to zip. start your process again......")
             rmdir(dir_work(uid, zip_name))
             return
 
+        # Add files to zip with unique names to avoid duplicates
         with ZipFile(zip_path, "w") as zip:
             for file in list_dir(uid, zip_name):
                 file_path = f"{dir_work(uid, zip_name)}/{file}"
-                zip.write(file_path, arcname=file)
-                remove(file_path)
+                zip.write(file_path, arcname=file)  # add files to zip-archive with original names
+                remove(file_path)  # delete files that added
 
-        await stsmsg.edit_text("Uploading the zip archive...")
-
+        await stsmsg.edit_text("Uploading the zip archive...")  # change status-msg to "UPLOADING"
+        
         start_time = time.time()
         try:
             caption = f"""
@@ -160,9 +169,11 @@ async def stop_zip(client, msg: types.Message):
 
 **ᒍσιη  [.ｉｏ ｄｅｖｓ](https://t.me/botio_devs)**
 """
-            sent_msg = await msg.reply_document(zip_path, progress=up_progress, caption=caption, parse_mode=enums.ParseMode.MARKDOWN, progress_args=(stsmsg, start_time))
-            await stsmsg.delete()
-            remove(zip_path)
+            await msg.reply_document(zip_path, progress=up_progress, caption=caption, parse_mode=enums.ParseMode.MARKDOWN, # send the zip-archive
+                               progress_args=(stsmsg, start_time))
+            await stsmsg.delete()  # delete the status-msg
+            remove(zip_path)  # delete the zip-archive
+            # Delete all subdirectories and their contents within static/{uid}/
             user_dir = f"static/{uid}/"
             for subdir in os.listdir(user_dir):
                 subdir_path = os.path.join(user_dir, subdir)
@@ -170,7 +181,8 @@ async def stop_zip(client, msg: types.Message):
                     shutil.rmtree(subdir_path)
         except ValueError as e:
             await msg.reply(f"An unknown error occurred: {str(e)}")
-            remove(zip_path)
+            remove(zip_path)  # delete the zip-archive
+            # Delete all subdirectories and their contents within static/{uid}/
             user_dir = f"static/{uid}/"
             for subdir in os.listdir(user_dir):
                 subdir_path = os.path.join(user_dir, subdir)
@@ -183,7 +195,7 @@ async def stop_zip(client, msg: types.Message):
 
 if __name__ == '__main__':
     try:
-        mkdir("static")
+        mkdir("static")  # create static files folder
     except FileExistsError:
         pass
 
