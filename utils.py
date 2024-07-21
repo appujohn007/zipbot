@@ -64,7 +64,7 @@ async def download_progress(current, total, msg: Message, start_time, last_updat
 
     new_content = (f"**𝕯𝖔𝖜𝖓𝖑𝖔𝖆𝖉𝖎𝖓𝖌➽ {progress:.1f}%**\n\n"
                    f"{progress_bar}\n"
-                   f"**🧑‍🏭 ᴘʀᴏɢʀᴇss: {downloaded_str}\{size_str}**\n"
+                   f"**🧑‍🏭 ᴘʀᴏɢʀᴇss: {downloaded_str} ／ {size_str}**\n"
                    f"**🚀 sᴘᴇᴇᴅ: {speed_str}**\n"
                    f"**⏳ ᴇᴛᴀ: {eta_str}**")
     
@@ -91,7 +91,7 @@ async def up_progress(current, total, msg: Message, start_time, last_update=[0])
 
     new_content = (f"**𝖀𝖕𝖑𝖔𝖆𝖉𝖎𝖓𝖌➽ {progress:.1f}%**\n\n"
                    f"{progress_bar}\n"
-                   f"**🧑‍🏭 ᴘʀᴏɢʀᴇss: {uploaded_str}\{size_str}**\n"
+                   f"**🧑‍🏭 ᴘʀᴏɢʀᴇss: {uploaded_str} ／ {size_str}**\n"
                    f"**🚀 sᴘᴇᴇᴅ: {speed_str}**\n"
                    f"**⏳ ᴇᴛᴀ: {eta_str}**")
     
