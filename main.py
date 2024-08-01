@@ -9,6 +9,9 @@ import time
 import shutil
 
 from scripts import help_text, start_text, invalid_cmd
+import pyrogram.utils
+
+pyrogram.utils.MIN_CHANNEL_ID = -1009999999999
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
